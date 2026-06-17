@@ -1,142 +1,112 @@
- # 王者荣耀Java项目设计说明
+# 王者荣耀信息管理系统 — Honor of Kings Management System
 
-## 项目分层结构
+---
+
+## 1. Project Overview
+
+王者荣耀信息管理系统是一个基于 Java 的控制台应用程序，用于管理玩家、英雄、装备、队伍和比赛记录。系统提供查询、排名、数据管理等功能，综合运用了 Java SE 核心知识，包括面向对象编程（OOP）、集合框架、泛型、接口、枚举和异常处理。
+
+**核心实体**：Person（抽象类）→ Player / Admin、Hero、Equipment、Team、MatchRecord
+
+---
+
+## 2. How to Run
+
+### 环境要求
+- JDK 17+
+- 操作系统：Windows
+
+### 编译运行
+
+```bash
+cd D:\develop\java_honor_of_kings
+javac -d bin -sourcepath src src/com/honor/kings/HonorOfKings.java
+java -cp bin com.honor.kings.HonorOfKings
 ```
-com.honor.kings
-├── model                  # 数据模型层
-│   ├── entity             # 实体类
-│   │   ├── Hero.java
-│   │   ├── Equipment.java
-│   │   ├── Team.java
-│   │   └── MatchRecord.java
-│   └── person             # 人员类
-│       ├── Person.java    (抽象父类)
-│       ├── Player.java    (子类)
-│       └── Admin.java     (子类)
-├── service                # 业务逻辑层
-│   ├── HeroService.java
-│   ├── TeamService.java
-│   ├── MatchService.java
-│   └── impl               # 实现类
-│       ├── HeroServiceImpl.java
-│       ├── TeamServiceImpl.java
-│       └── MatchServiceImpl.java
-└── HonorOfKings.java      # 主入口
-```
+
+> **注意**：Windows 系统下如果出现中文乱码或输入中文后搜索不到角色（如输入"梦泪"显示"未找到该玩家"），请在运行前先执行 `chcp 65001` 切换到 UTF-8 编码。
 
 ---
 
-## 一、model 层
+## 3. Default Login Accounts
 
-### 1. abstract class Person（抽象父类）
-- 核心属性：`String id, String name, String email, LocalDateTime createTime`
-- 核心方法：`abstract String getRole()`（子类实现返回角色名）
-- 关系：被 `Player` 和 `Admin` 继承（继承关系）
-
-### 2. class Player extends Person
-- 核心属性：`int level, int totalMatches, int winCount, List<Hero> ownedHeroes, Team currentTeam`
-- 核心方法：`joinTeam(Team team), leaveTeam(), addHero(Hero hero), getWinRate()`
-- 关系：继承 `Person`；聚合多个 `Hero`（玩家拥有英雄）；关联 `Team`（玩家属于队伍）
-
-### 3. class Admin extends Person
-- 核心属性：`String permissionLevel, String department`
-- 核心方法：`approveMatch(MatchRecord match), banPlayer(Player player), adjustHeroStats(Hero hero)`
-- 关系：继承 `Person`
-
-### 4. class Hero（实体）
-- 核心属性：`String id, String name, String title, int baseHp, int baseAttack, int baseDefense, List<Equipment> equipmentList, String faction, int level`
-- 核心方法：`equip(Equipment eq), unequip(Equipment eq), getTotalHp(), getTotalAttack(), getTotalDefense()`
-- 关系：聚合多个 `Equipment`（组合，英雄装备多件装备）
-
-### 5. class Equipment（实体）
-- 核心属性：`String id, String name, EquipmentType type, int bonusHp, int bonusAttack, int bonusDefense, int price`
-- 核心方法：`getDescription()`
-- 枚举：`EquipmentType { WEAPON, ARMOR, BOOTS, ACCESSORY }`
-- 关系：被 `Hero` 聚合引用
-
-### 6. class Team（实体）
-- 核心属性：`String id, String teamName, int maxMembers, int score, LocalDateTime foundedTime`
-- 核心方法：`isFull()`（通过查询当前成员数判断）
-- 关系：不再持有 `Player` 列表；成员查询通过 `PlayerService.getPlayersByTeamId(teamId)` 实现
-
-### 7. class MatchRecord（实体）
-- 核心属性：`String id, Team teamA, Team teamB, int scoreA, int scoreB, Team winner, String duration, LocalDateTime matchTime, MatchStatus status`
-- 核心方法：`determineWinner(), getMatchSummary()`
-- 枚举：`MatchStatus { SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED }`
-- 关系：关联两个 `Team`（对战双方）
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员（Admin） | admin | admin123 |
+| 普通玩家（Player） | player1 | 123456 |
 
 ---
 
-## 二、接口
+## 4. Implemented Features
 
-### interface Searchable
-- 方法：`List<T> searchByName(String keyword)`
-- 业务意义：支持按名称搜索实体（英雄、装备、队伍等），让 `HeroService`、`TeamService` 等实现此接口
-- 实现者：`HeroServiceImpl`, `TeamServiceImpl`
-
-### interface Persistable
-- 方法：`boolean save(T entity), T findById(String id), boolean delete(String id), List<T> findAll()`
-- 业务意义：定义通用的持久化 CRUD 操作，让所有 Service 实现此接口
-- 实现者：`HeroServiceImpl`, `TeamServiceImpl`, `MatchServiceImpl`
-
----
-
-## 三、service 层
-
-### 1. class HeroServiceImpl implements Searchable<Hero>, Persistable<Hero>
-- 核心方法：
-  - `save(Hero hero)`, `findById(id)`, `delete(id)`, `findAll()` —— 实现 Persistable
-  - `searchByName(keyword)` —— 实现 Searchable
-  - `equipHero(Hero hero, Equipment eq)`, `unequipHero(Hero hero, Equipment eq)`
-  - `getHeroesByFaction(String faction)`
-- 关系：实现 `Searchable<Hero>` 和 `Persistable<Hero>` 接口
-
-### 2. class TeamServiceImpl implements Searchable<Team>, Persistable<Team>
-- 核心方法：
-  - `save(Team team)`, `findById(id)`, `delete(id)`, `findAll()` —— 实现 Persistable
-  - `searchByName(keyword)` —— 实现 Searchable
-  - `addPlayerToTeam(Team team, Player player)`, `removePlayerFromTeam(Team team, Player player)`（通过 `Player.setTeam()` 实现，无需操作 `Team.members`）
-  - `getMembers(String teamId)`（调用 `PlayerService` 按 teamId 查询）
-  - `getRanking()`
-- 关系：实现 `Searchable<Team>` 和 `Persistable<Team>` 接口
-
-### 3. class MatchServiceImpl implements Persistable<MatchRecord>
-- 核心方法：
-  - `save(MatchRecord match)`, `findById(id)`, `delete(id)`, `findAll()` —— 实现 Persistable
-  - `startMatch(Team teamA, Team teamB)`
-  - `finishMatch(String matchId, int scoreA, int scoreB)`
-  - `getPlayerMatchHistory(Player player)`
-  - `getTeamWinRate(Team team)`
-- 关系：实现 `Persistable<MatchRecord>` 接口
+| 选项 | 功能 | 说明 |
+|------|------|------|
+| 1 | 玩家查询 | 按姓名查找玩家，显示等级、胜率、英雄及装备 |
+| 2 | 队伍概览 | 按名称或 ID 查找队伍，显示成员、平均等级、比赛统计、胜率、最强玩家 |
+| 3 | 英雄详情 | 按名称查找英雄，显示基础/总属性、装备列表、拥有该英雄的玩家 |
+| 4 | 装备统计 | 统计每件装备被英雄使用的次数，按降序显示前 5 名 |
+| 5 | 对战历史 | 按玩家姓名查询最近 5 场比赛，显示对手、日期、比分、结果 |
+| 6 | 排行榜 | 按胜率降序排列，显示前 3 名玩家 |
+| 7 | 数据管理 | 管理员增删玩家/英雄/装备（仅管理员可用） |
+| 8 | 退出登录 | 返回登录界面，可切换账号 |
+| 9 | 退出系统 | 结束程序 |
 
 ---
 
-## 四、OOP 特性体现总结
+## 5. Java Concepts Used
 
 | OOP 特性 | 体现位置 |
 |---------|---------|
-| **继承** | `Person` ← `Player` / `Admin` |
+| **继承** | `Person`（抽象类）← `Player` / `Admin` |
 | **封装** | 所有属性为 `private`，通过 getter/setter 或业务方法访问 |
 | **聚合/组合** | `Hero` 聚合 `Equipment`；`Player` 聚合 `Hero`；`Player` 单向关联 `Team` |
 | **多态** | `Person.getRole()` 由子类实现不同行为；`Searchable` / `Persistable` 接口多态 |
-| **接口** | `Searchable` 按名称搜索；`Persistable` 通用 CRUD 持久化 |
+| **接口** | `Searchable<T>` 定义按名称搜索；`Persistable<T>` 定义通用 CRUD |
+| **泛型** | `Searchable<T>`、`Persistable<T>`、`List<T>`、`Map<K,V>` |
+| **集合** | `ArrayList`、`HashMap` 用于数据存储和统计 |
+| **枚举** | `EquipmentType`（WEAPON/ARMOR/BOOTS/ACCESSORY）、`MatchStatus`（SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED） |
+| **异常处理** | 数字格式校验、输入验证、权限检查 |
 
 ---
 
-## 五、类关系图（文字描述）
+## 6. AI Usage Summary
 
-```
-Person (abstract)
-  ├── Player ——聚合——> Hero (1:N) ——聚合——> Equipment (1:N)
-  │            单向关联
-  │              └——> Team (N:1)
-  └── Admin
+本项目使用 **DeepSeek Chat（DeepSeek-V3）** 作为 AI 辅助工具，扮演三种角色：
 
-MatchRecord ——关联——> Team (2个, teamA & teamB)
+| 角色 | 职责 |
+|------|------|
+| **Architect Agent** | 审查类设计、关联方向、UML，提出单向关联改进建议 |
+| **Implementation Agent** | 生成实体类、Service 层、DataInitializer、主菜单等代码 |
+| **Testing/Reviewer Agent** | 审查代码编译错误，生成 10 个测试用例 |
 
-成员查询路径：PlayerService.getPlayersByTeamId(teamId) ——查询——> Player.teamId
+AI 协作流程：设计审查 → 代码生成 → 手动编译验证 → 反馈修正。AI 生成的代码骨架约占项目代码量的 60%，手动调整的部分包括包路径修正、数据 Bug 修复（胜率超 100%）、菜单功能逻辑实现。
 
-HeroServiceImpl ——实现——> Searchable<Hero>, Persistable<Hero>
-TeamServiceImpl ——实现——> Searchable<Team>, Persistable<Team>
-MatchServiceImpl ——实现——> Persistable<MatchRecord>
-```
+详细记录见 `ai/prompts.md` 和 `ai/reflection.md`。
+
+---
+
+## 7. Testing Summary
+
+共计 **10 个测试用例**，覆盖全部 8 个功能模块，所有用例已通过。
+
+| 测试 ID | 功能 | 用例数 | 状态 |
+|---------|------|--------|------|
+| TC-01 ~ TC-02 | 玩家查询（存在/不存在） | 2 | ☑ 通过 |
+| TC-03 | 队伍概览 | 1 | ☑ 通过 |
+| TC-04 | 英雄详情 | 1 | ☑ 通过 |
+| TC-05 | 装备统计 | 1 | ☑ 通过 |
+| TC-06 | 对战历史 | 1 | ☑ 通过 |
+| TC-07 | 排行榜 | 1 | ☑ 通过 |
+| TC-08 ~ TC-09 | 登录（正确/错误密码） | 2 | ☑ 通过 |
+| TC-10 | 数据管理 | 1 | ☑ 通过 |
+
+详细测试用例见 `docs/test-cases.md`。
+
+---
+
+## 8. Known Limitations
+
+- **内存存储**：所有数据存储在内存（List/Map）中，程序关闭后数据丢失，不支持持久化。
+- **对战历史维度有限**：仅支持按玩家姓名查询，不支持按队伍或时间段查询。
+- **固定账号**：登录账号硬编码（admin/admin123、player1/123456），不支持注册新用户。
+- **中文编码**：在 Windows cmd 默认编码（GBK）下中文可能显示乱码或输入中文搜索不到角色，需执行 `chcp 65001` 切换 UTF-8。

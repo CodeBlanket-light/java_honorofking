@@ -13,12 +13,18 @@ import java.util.*;
 
 public class DataInitializer {
 
+    private static List<Equipment> allEquipment;
+    private static List<Hero> allHeroes;
+    private static List<Team> allTeams;
+    private static List<Player> allPlayers;
+    private static List<MatchRecord> allMatches;
+
     public static void initAll() {
-        List<Equipment> allEquipment = createEquipment();
-        List<Hero> allHeroes = createHeroes(allEquipment);
-        List<Team> allTeams = createTeams();
-        List<Player> allPlayers = createPlayers(allHeroes, allTeams);
-        List<MatchRecord> allMatches = createMatches(allTeams);
+        allEquipment = createEquipment();
+        allHeroes = createHeroes(allEquipment);
+        allTeams = createTeams();
+        allPlayers = createPlayers(allHeroes, allTeams);
+        allMatches = createMatches(allTeams);
 
         System.out.println("=== 数据初始化完成 ===");
         System.out.println("装备: " + allEquipment.size() + " 件");
@@ -26,6 +32,26 @@ public class DataInitializer {
         System.out.println("队伍: " + allTeams.size() + " 个");
         System.out.println("玩家: " + allPlayers.size() + " 个");
         System.out.println("比赛记录: " + allMatches.size() + " 条");
+    }
+
+    public static List<Equipment> getAllEquipment() {
+        return allEquipment != null ? allEquipment : new ArrayList<>();
+    }
+
+    public static List<Hero> getAllHeroes() {
+        return allHeroes != null ? allHeroes : new ArrayList<>();
+    }
+
+    public static List<Team> getAllTeams() {
+        return allTeams != null ? allTeams : new ArrayList<>();
+    }
+
+    public static List<Player> getAllPlayers() {
+        return allPlayers != null ? allPlayers : new ArrayList<>();
+    }
+
+    public static List<MatchRecord> getAllMatches() {
+        return allMatches != null ? allMatches : new ArrayList<>();
     }
 
     private static List<Equipment> createEquipment() {
@@ -76,8 +102,8 @@ public class DataInitializer {
         };
 
         for (String[] d : heroData) {
-            Hero hero = new Hero(d[0], d[1], d[2], Integer.parseInt(d[3]), Integer.parseInt(d[4]),
-                    Integer.parseInt(d[5]), d[6], 1);
+            Hero hero = new Hero(d[0], d[1], d[2], Integer.parseInt(d[4]), Integer.parseInt(d[5]),
+                    Integer.parseInt(d[6]), d[3], 1);
             int equipCount = 1 + rand.nextInt(3);
             for (int i = 0; i < equipCount; i++) {
                 hero.equip(allEquipment.get(rand.nextInt(allEquipment.size())));
@@ -101,9 +127,11 @@ public class DataInitializer {
         String[] names = {"梦泪", "剑仙", "张大仙", "孤影", "北慕", "可杰", "韩涵", "微凉", "故辞", "小予神"};
 
         for (int i = 0; i < 10; i++) {
+            int totalMatches = 10 + rand.nextInt(100);
+            int winCount = rand.nextInt(totalMatches + 1);
             Player p = new Player("P" + String.format("%02d", i + 1), names[i],
                     names[i] + "@honor.com", LocalDateTime.now().minusDays(rand.nextInt(365)),
-                    1 + rand.nextInt(30), 10 + rand.nextInt(200), 5 + rand.nextInt(150));
+                    1 + rand.nextInt(30), totalMatches, winCount);
             int heroCount = 2 + rand.nextInt(3);
             for (int j = 0; j < heroCount; j++) {
                 p.addHero(allHeroes.get(rand.nextInt(allHeroes.size())));
