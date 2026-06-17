@@ -11,9 +11,7 @@ import com.honor.kings.util.FileStorageUtil;
 import com.honor.kings.model.entity.Team;
 import com.honor.kings.model.entity.MatchRecord;
 import com.honor.kings.model.entity.Equipment;
-import com.honor.kings.hero.ZhaoYun;
-import com.honor.kings.hero.LiBai;
-import com.honor.kings.hero.DiaoChan;
+import com.honor.kings.hero.*;
 import com.honor.kings.battle.Battle;
 import com.honor.kings.model.entity.BattleRecord;
 import java.util.*;
@@ -23,15 +21,24 @@ import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
+/**
+ * 王者荣耀 Java 控制台版 — 主入口类
+ * 演示：多态（Person / Player / Admin）、集合（List / Map / Stream API）、
+ *       枚举（EquipmentCategory / MatchStatus）、异常处理（try-catch）、
+ *       文件I/O（序列化保存）、继承、封装、接口、泛型、Comparator 排序
+ *
+ * 功能菜单：登录/注册、玩家查询、队伍概览、英雄详情、装备统计、
+ *           对战历史、排行榜、数据管理（管理员专享）、战斗模式
+ */
 public class HonorOfKings {
-    // 多态：currentUser 声明为 Person 类型，实际可指向 Player 或 Admin 实例
+    /** 多态：currentUser 声明为 Person 类型，运行时指向 Player 或 Admin 实例 */
     private static Person currentUser;
     private static HeroServiceImpl heroService = new HeroServiceImpl();
     private static Scanner scanner = new Scanner(System.in);
-    // 战斗记录列表：只保留最近 5 场，含英雄、装备、胜负、时间
+    /** 战斗记录列表：只保留最近 5 场，用于对战历史展示和装备出场率统计 */
     private static List<BattleRecord> battleRecords;
 
-    // 程序入口：先初始化数据，然后循环显示登录或主菜单
+    /** 程序入口：初始化数据后进入登录/主菜单循环 */
     public static void main(String[] args) {
         battleRecords = DataInitializer.initAll();
 
@@ -46,6 +53,7 @@ public class HonorOfKings {
         }
     }
 
+    /** 显示登录界面：支持登录和注册，admin 使用固定账号，普通玩家从列表匹配 */
     private static void showLoginMenu() {
         System.out.println("\n==================================");
         System.out.println("        王者荣耀 - 登录");
@@ -91,6 +99,7 @@ public class HonorOfKings {
         }
     }
 
+    /** 注册新玩家：校验用户名唯一性、密码长度，时间戳生成唯一 ID，注册后立即存档 */
     private static void showRegister() {
         System.out.println("\n=== 注册新玩家 ===");
         System.out.print("请输入用户名: ");
@@ -125,6 +134,7 @@ public class HonorOfKings {
         System.out.println("注册成功！请重新登录。");
     }
 
+    /** 显示主菜单：根据当前用户角色（Player/Admin）动态展示可用功能 */
     private static void showMainMenu() {
         System.out.println("\n==================================");
         System.out.println("  王者荣耀 Java版 - 主菜单");
@@ -188,6 +198,7 @@ public class HonorOfKings {
         }
     }
 
+    /** 按姓名模糊查询玩家，显示其等级、胜率、拥有的英雄及装备 */
     private static void queryPlayer() {
         System.out.print("请输入要查询的玩家姓名: ");
         String name = scanner.nextLine().trim();
@@ -220,6 +231,7 @@ public class HonorOfKings {
         System.out.println("未找到该玩家");
     }
 
+    /** 队伍查询：支持按名称或 ID 查询，或创建新队伍；显示成员、平均等级、最近5场比赛 */
     private static void queryTeam() {
         System.out.println("\n已有队伍:");
         for (Team t : DataInitializer.getAllTeams()) {
@@ -329,6 +341,7 @@ public class HonorOfKings {
         }
     }
 
+    /** 英雄详情查询：显示属性、装备、拥有者，并根据英雄类型推荐装备 */
     private static void queryHeroDetail() {
         System.out.print("请输入要查询的英雄名称: ");
         String name = scanner.nextLine().trim();
@@ -418,8 +431,7 @@ public class HonorOfKings {
                 });
     }
 
-    // 装备排名方法：综合分 = 使用次数 * 0.3 + 胜率贡献 * 0.7
-    // 胜率贡献 = 装备该装备的英雄所属玩家的平均胜率
+    /** 装备排行榜：综合分 = 使用次数 * 0.3 + 装备者平均胜率 * 0.7，显示前5名 */
     private static void showEquipmentStats() {
         Map<String, Integer> equipCount = new HashMap<>();
         Map<String, Equipment> equipMap = new HashMap<>();
@@ -479,6 +491,7 @@ public class HonorOfKings {
         }
     }
 
+    /** 战斗历史展示：显示最近5场战斗结果、英雄选用率、装备出场率和胜场统计 */
     private static void showMatchHistory() {
         if (battleRecords == null || battleRecords.isEmpty()) {
             System.out.println("暂无对战记录");
@@ -522,27 +535,25 @@ public class HonorOfKings {
         }
     }
 
+    /** 玩家排行榜（前3名）：按胜率降序，同胜率按总场次降序 */
     private static void showRanking() {
-        List<Player> players = DataInitializer.getAllPlayers();
+        List<Player> players = new ArrayList<>(DataInitializer.getAllPlayers());
         if (players.isEmpty()) {
             System.out.println("暂无玩家数据");
             return;
         }
-        // 实力分 = 胜率 * 50 + 等级 * 10 - 总场次 * 0.1
-        // 平局处理：分数相同则按等级降序排列
-        players.sort(Comparator.comparingDouble((Player p) ->
-                p.getTotalMatches() == 0 ? -1 : p.getWinRate() * 50 + p.getLevel() * 10 - p.getTotalMatches() * 0.1
-        ).reversed().thenComparing(Comparator.comparingInt(Player::getLevel).reversed()));
+        players.sort(Comparator.comparing(Player::getWinRate).reversed()
+                .thenComparing(Comparator.comparing(Player::getTotalMatches).reversed()));
         System.out.println("玩家排行榜（前3名）:");
-        System.out.println("排名公式：实力分 = 胜率 × 50 + 等级 × 10 - 总场次 × 0.1");
+        System.out.println("排序规则：按胜率降序，胜率相同按总场次降序");
         for (int i = 0; i < 3 && i < players.size(); i++) {
             Player p = players.get(i);
-            double score = p.getTotalMatches() == 0 ? -1 : p.getWinRate() * 50 + p.getLevel() * 10 - p.getTotalMatches() * 0.1;
             String rateStr = p.getTotalMatches() == 0 ? "N/A" : String.format("%.1f%%", p.getWinRate());
-            System.out.println((i + 1) + ". " + p.getName() + " - 实力分: " + String.format("%.1f", score) + " - 胜率: " + rateStr + " - 等级: " + p.getLevel() + " - 总场次: " + p.getTotalMatches());
+            System.out.println((i + 1) + ". " + p.getName() + " - 胜率: " + rateStr + " - 总场次: " + p.getTotalMatches() + " - 胜场: " + p.getWinCount());
         }
     }
 
+    /** 数据管理面板（仅 Admin 可访问）：支持增删玩家、英雄、装备 */
     private static void showDataManagement() {
         while (true) {
             System.out.println("\n=== 数据管理 ===");
@@ -652,7 +663,7 @@ public class HonorOfKings {
         }
     }
 
-    // 程序退出前调用序列化保存所有数据到 data/game_data.ser
+    /** 退出前保存全部数据（含战斗记录）到 data/game_data.ser */
     private static void saveBeforeExit() {
         FileStorageUtil.saveAllData(
                 DataInitializer.getAllPlayers(),
@@ -664,28 +675,26 @@ public class HonorOfKings {
         );
     }
 
+    /** 战斗模式彩蛋：从15个战斗英雄池中随机抽3个供玩家选择，使用真实技能对战 */
     private static void startBattleMode() {
         System.out.println("\n=== 战斗模式 ===");
-        List<com.honor.kings.model.entity.Hero> allHeroes = DataInitializer.getAllHeroes();
-        System.out.println("可选英雄:");
-        for (int i = 0; i < allHeroes.size(); i++) {
-            System.out.println("  H" + String.format("%02d", i + 1) + " - " + allHeroes.get(i).getName());
-        }
-        com.honor.kings.hero.Hero[] battleHeroes = {
-            new ZhaoYun(), new LiBai(), new DiaoChan()
-        };
+        List<com.honor.kings.hero.Hero> pool = buildHeroPool();
         Random rand = new Random();
-        String[] pickNames = new String[3];
-        List<String>[] pickEquipment = new List[3];
+        List<com.honor.kings.hero.Hero> picked = new ArrayList<>();
+        List<Integer> usedIndices = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            int idx = rand.nextInt(allHeroes.size());
-            com.honor.kings.model.entity.Hero dataHero = allHeroes.get(idx);
-            pickNames[i] = dataHero.getName();
-            pickEquipment[i] = new ArrayList<>();
-            for (Equipment eq : dataHero.getEquipmentList()) {
-                pickEquipment[i].add(eq.getName());
+            int idx;
+            do {
+                idx = rand.nextInt(pool.size());
+            } while (usedIndices.contains(idx));
+            usedIndices.add(idx);
+            picked.add(pool.get(idx));
+            com.honor.kings.hero.Hero h = picked.get(i);
+            System.out.println("  " + (i + 1) + ". " + h.getTitle() + " " + h.getName() + " （血量:" + h.getMaxHp() + " 攻击:" + h.getAttack() + " 防御:" + h.getDefense() + "）");
+            for (int j = 0; j < h.getSkillCount(); j++) {
+                com.honor.kings.skill.Skill s = h.getSkills().get(j);
+                System.out.println("     技能" + (j + 1) + ": " + s.getName() + " - " + s.getDescription() + "（伤害:" + s.getDamage() + "）");
             }
-            System.out.println("  " + (i + 1) + ". " + pickNames[i] + " (" + dataHero.getTitle() + ")");
         }
         System.out.print("选择第一个英雄 (1-3): ");
         int choice1;
@@ -706,15 +715,40 @@ public class HonorOfKings {
             System.out.println("不能选择同一个英雄");
             return;
         }
-        Battle battle = new Battle(battleHeroes[choice1], battleHeroes[choice2]);
+        com.honor.kings.hero.Hero h1 = picked.get(choice1);
+        com.honor.kings.hero.Hero h2 = picked.get(choice2);
+        Battle battle = new Battle(h1, h2);
         battle.start();
         String winner = battle.getWinner();
         String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        BattleRecord record = new BattleRecord(timeStr, pickNames[choice1], pickNames[choice2],
-                pickEquipment[choice1], pickEquipment[choice2], winner);
+        List<String> h1Equipment = new ArrayList<>();
+        List<String> h2Equipment = new ArrayList<>();
+        BattleRecord record = new BattleRecord(timeStr, h1.getName(), h2.getName(),
+                h1Equipment, h2Equipment, winner);
         battleRecords.add(record);
         if (battleRecords.size() > 5) {
             battleRecords.remove(0);
         }
+    }
+
+    /** 构建15个战斗英雄池，每个英雄拥有专属技能 */
+    private static List<com.honor.kings.hero.Hero> buildHeroPool() {
+        List<com.honor.kings.hero.Hero> pool = new ArrayList<>();
+        pool.add(new ZhaoYun());
+        pool.add(new LiBai());
+        pool.add(new DiaoChan());
+        pool.add(new GuanYu());
+        pool.add(new ZhuGeLiang());
+        pool.add(new HanXin());
+        pool.add(new HuaMuLan());
+        pool.add(new SunShangXiang());
+        pool.add(new LvBu());
+        pool.add(new WuZeTian());
+        pool.add(new CaoCao());
+        pool.add(new ZhouYu());
+        pool.add(new XiangYu());
+        pool.add(new DaJi());
+        pool.add(new ChengYaoJin());
+        return pool;
     }
 }
