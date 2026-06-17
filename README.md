@@ -8,6 +8,8 @@
 
 **核心实体**：Person（抽象类）→ Player / Admin、Hero、Equipment、Team、MatchRecord
 
+**架构决策**：采用三层架构（model / service / util），单向关联避免双向一致性问题，序列化实现持久化，接口多态支持可扩展的服务实现。
+
 ---
 
 ## 2. How to Run
@@ -44,7 +46,7 @@ java -cp bin com.honor.kings.HonorOfKings
 | 1 | 玩家查询 | 按姓名查找玩家，显示等级、胜率、英雄及装备 |
 | 2 | 队伍概览 | 按名称或 ID 查找队伍，显示成员、平均等级、比赛统计、胜率、最强玩家 |
 | 3 | 英雄详情 | 按名称查找英雄，显示基础/总属性、装备列表、拥有该英雄的玩家 |
-| 4 | 装备统计 | 统计每件装备被英雄使用的次数，按降序显示前 5 名 |
+| 4 | 装备统计 | 统计每件装备被英雄使用的次数，按降序显示前 5 名。**排名公式**：遍历所有英雄的 `equipmentList`，统计每件装备的出现次数 → 按次数降序排列 → 次数相同按装备名称排序 → 取前 5 名 |
 | 5 | 对战历史 | 按玩家姓名查询最近 5 场比赛，显示对手、日期、比分、结果 |
 | 6 | 排行榜 | 按胜率降序排列，显示前 3 名玩家 |
 | 7 | 数据管理 | 管理员增删玩家/英雄/装备（仅管理员可用） |
@@ -60,7 +62,7 @@ java -cp bin com.honor.kings.HonorOfKings
 | **继承** | `Person`（抽象类）← `Player` / `Admin` |
 | **封装** | 所有属性为 `private`，通过 getter/setter 或业务方法访问 |
 | **聚合/组合** | `Hero` 聚合 `Equipment`；`Player` 聚合 `Hero`；`Player` 单向关联 `Team` |
-| **多态** | `Person.getRole()` 由子类实现不同行为；`Searchable` / `Persistable` 接口多态 |
+| **多态** | **① 方法重写**：`Player` 和 `Admin` 重写 `Person.getRole()`，分别返回 `"Player"` 和 `"Admin"`。**② 运行时类型**：主菜单用 `instanceof Admin` 判断管理员权限。**③ 接口多态**：`HeroServiceImpl`、`TeamServiceImpl`、`MatchServiceImpl` 分别实现 `Searchable` / `Persistable` 接口 |
 | **接口** | `Searchable<T>` 定义按名称搜索；`Persistable<T>` 定义通用 CRUD |
 | **泛型** | `Searchable<T>`、`Persistable<T>`、`List<T>`、`Map<K,V>` |
 | **集合** | `ArrayList`、`HashMap` 用于数据存储和统计 |
