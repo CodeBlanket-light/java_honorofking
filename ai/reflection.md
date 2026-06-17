@@ -51,7 +51,7 @@
 - **实体类初版骨架**：`Person`、`Player`、`Admin`、`Hero`、`Equipment`、`Team`、`MatchRecord` 的初版代码（含属性、构造器、getter/setter）。
 - **Service 层**：`Searchable`、`Persistable` 接口及 `HeroServiceImpl`、`TeamServiceImpl`、`MatchServiceImpl` 的实现。
 - **数据初始化**：`DataInitializer` 中的 20 件装备、15 个英雄、3 个队伍、10 个玩家的硬编码数据集。
-- **战斗英雄类**：12 个新英雄类（关羽、诸葛亮等）的创建及 3 个技能的初始数据。
+- **战斗英雄类**：12 个新英雄类（关羽、诸葛亮等）的创建及 3 个技能的初始数据。但后来发现尽管创建了 15 个英雄类，实际战斗界面仍然只使用了原来固定的 3 个英雄对象（赵云、李白、貂蝉），只是随机显示不同的名字，属于显示层漏洞。之后我创建了 `buildHeroPool()` 方法，从 15 个英雄池中随机抽取 3 个真正的英雄实例进行对战，建立了完整的匹配机制。
 - **序列化工具**：`FileStorageUtil`、`GameData` 的框架代码。
 - **UML 类图**：Mermaid 格式的 UML 图生成。
 - **主菜单框架**：`HonorOfKings.java` 的初始菜单框架和登录逻辑（后续人工扩展了所有功能实现）。
