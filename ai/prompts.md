@@ -547,3 +547,20 @@ AI 重写了 Battle.java，将回合制逻辑拆分为 playerTurn() 和 aiTurn()
 
 My Decision:
 接受代码。AI 决策逻辑已完成。
+
+
+## Prompt 33
+
+Time: 2026-06-18 07:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: ab1832a
+
+My Prompt:
+Java 实现代理，为我的项目增加玩家等级成长机制。Player 类添加 exp 字段。战斗胜利 +100 经验，升级所需经验 = 当前等级 × 100。排行榜公式改为：表现分 = 胜场×3 - 负场×1 + 等级×2。平局按 0.5 胜场计算，输出"平局 - 可敬的对手"。
+
+AI Response Summary:
+AI 在 Player 中添加了 exp 字段和 addExp() 方法（含循环升级逻辑）。修改战斗结算：胜利 addExp(100)，平局 winCount+1 并输出提示。排行榜改为表现分降序排列。所有玩家初始等级改为 1。
+
+My Decision:
+接受代码。

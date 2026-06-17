@@ -12,10 +12,12 @@ import com.honor.kings.model.person.Player;
 import java.time.LocalDateTime;
 import java.util.*;
 
-// DataInitializer：数据初始化工具类
-// 职责：生成初始硬编码数据集（10玩家/15英雄/20装备/3队伍/10比赛）
-// 文件I/O：initAll() 优先尝试从序列化文件加载，失败则使用硬编码数据
-// 集合：使用 ArrayList 和 Random 生成测试数据
+/**
+ * DataInitializer：数据初始化工具类
+ * 演示：文件I/O（从序列化文件加载）、异常处理（加载失败降级到硬编码）、
+ *       集合（ArrayList、Random 生成测试数据）
+ * 职责：生成或加载初始数据集（10玩家、15英雄、20装备、3队伍、10比赛）
+ */
 public class DataInitializer {
 
     private static List<Equipment> allEquipment;
@@ -24,8 +26,10 @@ public class DataInitializer {
     private static List<Player> allPlayers;
     private static List<MatchRecord> allMatches;
 
-    // 初始化数据：优先从序列化文件加载，加载失败则使用硬编码数据
-    // 文件I/O 与 异常处理：FileStorageUtil.loadAllData() 内部已捕获异常
+    /**
+     * 初始化所有数据：优先从序列化文件加载，加载失败则生成硬编码默认数据
+     * 文件I/O：FileStorageUtil.loadAllData() 内部已捕获异常
+     */
     public static List<BattleRecord> initAll() {
         GameData loaded = FileStorageUtil.loadAllData();
         if (loaded != null) {
@@ -79,6 +83,7 @@ public class DataInitializer {
         return allMatches != null ? allMatches : new ArrayList<>();
     }
 
+    /** 创建 20 件预定义装备（10 件法术装 + 10 件防御装） */
     private static List<Equipment> createEquipment() {
         List<Equipment> list = new ArrayList<>();
         list.add(new Equipment("E01", "无尽战刃", EquipmentCategory.MAGIC, 0, 130, 0, 2140));
@@ -104,6 +109,7 @@ public class DataInitializer {
         return list;
     }
 
+    /** 创建 15 位预定义英雄，并为每位英雄随机分配装备 */
     private static List<Hero> createHeroes(List<Equipment> allEquipment) {
         List<Hero> list = new ArrayList<>();
         Random rand = new Random(42);
@@ -142,6 +148,7 @@ public class DataInitializer {
         return list;
     }
 
+    /** 创建 3 个预定义队伍 */
     private static List<Team> createTeams() {
         List<Team> list = new ArrayList<>();
         list.add(new Team("T01", "荣耀战队", 10, 1500, LocalDateTime.now().minusDays(30)));
@@ -150,18 +157,17 @@ public class DataInitializer {
         return list;
     }
 
+    /** 创建 10 名预定义玩家，每人随机分配英雄并加入队伍 */
     private static List<Player> createPlayers(List<Hero> allHeroes, List<Team> allTeams) {
         List<Player> list = new ArrayList<>();
         Random rand = new Random(123);
         String[] names = {"梦泪", "剑仙", "张大仙", "孤影", "北慕", "可杰", "韩涵", "微凉", "故辞", "小予神"};
 
-        list.add(new Player("P00", "player1", "player1@honor.com", LocalDateTime.now(), 10, 50, 30, "123456"));
+        list.add(new Player("P00", "player1", "player1@honor.com", LocalDateTime.now(), 1, 0, 0, "123456"));
         for (int i = 0; i < 10; i++) {
-            int totalMatches = 10 + rand.nextInt(100);
-            int winCount = rand.nextInt(totalMatches + 1);
             Player p = new Player("P" + String.format("%02d", i + 1), names[i],
                     names[i] + "@honor.com", LocalDateTime.now().minusDays(rand.nextInt(365)),
-                    1 + rand.nextInt(30), totalMatches, winCount);
+                    1, 0, 0);
             int heroCount = 2 + rand.nextInt(3);
             for (int j = 0; j < heroCount; j++) {
                 p.addHero(allHeroes.get(rand.nextInt(allHeroes.size())));
@@ -172,6 +178,7 @@ public class DataInitializer {
         return list;
     }
 
+    /** 创建 10 场随机比赛记录，双方队伍和比分均随机生成 */
     private static List<MatchRecord> createMatches(List<Team> allTeams) {
         List<MatchRecord> list = new ArrayList<>();
         Random rand = new Random(999);

@@ -542,14 +542,20 @@ public class HonorOfKings {
             System.out.println("暂无玩家数据");
             return;
         }
-        players.sort(Comparator.comparing(Player::getWinRate).reversed()
-                .thenComparing(Comparator.comparing(Player::getTotalMatches).reversed()));
-        System.out.println("玩家排行榜（前3名）:");
-        System.out.println("排序规则：按胜率降序，胜率相同按总场次降序");
-        for (int i = 0; i < 3 && i < players.size(); i++) {
+        // 表现分 = (胜场数 × 3) - (总场次 - 胜场数) × 1 + (等级 × 2)
+        // 平局按 0.5 胜场计算，排序按表现分降序
+        players.sort((a, b) -> {
+            double scoreA = a.getTotalMatches() == 0 ? 0 : a.getWinCount() * 3 - (a.getTotalMatches() - a.getWinCount()) * 1 + a.getLevel() * 2;
+            double scoreB = b.getTotalMatches() == 0 ? 0 : b.getWinCount() * 3 - (b.getTotalMatches() - b.getWinCount()) * 1 + b.getLevel() * 2;
+            return Double.compare(scoreB, scoreA);
+        });
+        System.out.println("玩家排行榜（共" + players.size() + "名）:");
+        System.out.println("排序规则：按表现分降序（表现分 = 胜场×3 - 负场×1 + 等级×2）");
+        for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
+            double score = p.getTotalMatches() == 0 ? 0 : p.getWinCount() * 3 - (p.getTotalMatches() - p.getWinCount()) * 1 + p.getLevel() * 2;
             String rateStr = p.getTotalMatches() == 0 ? "N/A" : String.format("%.1f%%", p.getWinRate());
-            System.out.println((i + 1) + ". " + p.getName() + " - 胜率: " + rateStr + " - 总场次: " + p.getTotalMatches() + " - 胜场: " + p.getWinCount());
+            System.out.println((i + 1) + ". " + p.getName() + " - 表现分: " + String.format("%.0f", score) + " - 胜率: " + rateStr + " - 等级: " + p.getLevel() + " - 总场次: " + p.getTotalMatches());
         }
     }
 
@@ -728,6 +734,17 @@ public class HonorOfKings {
         battleRecords.add(record);
         if (battleRecords.size() > 5) {
             battleRecords.remove(0);
+        }
+        if (currentUser instanceof Player) {
+            Player p = (Player) currentUser;
+            p.setTotalMatches(p.getTotalMatches() + 1);
+            if ("平局".equals(winner)) {
+                System.out.println("平局 - 可敬的对手");
+                p.setWinCount(p.getWinCount() + 1);
+            } else {
+                p.setWinCount(p.getWinCount() + 1);
+                p.addExp(100);
+            }
         }
     }
 
