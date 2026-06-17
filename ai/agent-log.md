@@ -1,80 +1,140 @@
 # Agent Log
 
-本项目在开发过程中使用了 DeepSeek Chat（模型：DeepSeek-V3）作为 AI 辅助工具，并扮演了三种不同的代理角色：Architect Agent（架构师）、Implementation Agent（实现代理）、Testing/Reviewer Agent（测试/审查代理）。以下是每种角色的主要贡献和相应的人工决策记录。
+This project used DeepSeek Chat (model: DeepSeek-V3) as an AI assistant throughout development, playing three different agent roles: Architect Agent, Implementation Agent, and Testing/Reviewer Agent. Below are the main contributions of each role and corresponding human decisions.
 
 ---
 
-## Architect Agent（架构师代理）
+## Architect Agent
 
-### 贡献 1：初始类结构设计审查
-- 时间：2026-06-16
-- AI 工具：DeepSeek Chat
-- 主要建议：建议了 Person（抽象）、Player、Admin、Hero、Equipment、Team、MatchRecord 的类结构，并指出 Team 与 Player 之间的双向关联会导致一致性问题。
-- 具体方案：
-  - 方案 A（推荐）：改为单向关联，Team 不持有 Player 列表，仅在 Player 中持有 Team 引用；查询队伍成员通过 PlayerService 按 teamId 过滤。
-  - 方案 B：保留双向但用 @JsonIgnore 标记一端（不采用，因为本项目未使用 JSON 序列化）。
-- 人工决策：采纳方案 A，移除 Team 中的 `List<Player> members`，在 Player 中保留 `Team currentTeam`。
-- 相关提交：
-  - `275d808` [AI-Implementation] add Equipment, Hero, Team entity classes（Team 按单向关联设计）
+### Contribution 1: Initial Class Structure Design Review
+- Date: 2026-06-16
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Reviewed the class structure of Person (abstract), Player, Admin, Hero, Equipment, Team, MatchRecord, and pointed out that the bidirectional association between Team and Player would cause consistency issues.
+- Specific Solutions:
+  - Option A (recommended): Change to unidirectional association. Team does not hold a Player list; Player holds a Team reference only. Query team members via PlayerService filtered by teamId.
+  - Option B: Keep bidirectional but annotate one end with @JsonIgnore (not adopted, as this project does not use JSON serialization).
+- Human Decision: Adopted Option A. Removed `List<Player> members` from Team, kept `Team currentTeam` in Player.
+- Related Commits:
+  - `275d808` [AI-Implementation] add Equipment, Hero, Team entity classes (Team designed with unidirectional association)
   - `d4c6c44` [Fix] correct import paths for Player and Admin
 
 ---
 
-### 贡献 2：UML 草稿与设计文档完善
-- 时间：2026-06-17
-- AI 工具：DeepSeek Chat
-- 主要建议：根据最终类结构，生成了文本形式的 UML 类图，并补充了类之间的关系描述（继承、聚合、关联）。
-- 人工决策：接受 UML 描述，并将其整合到 `plan.md` 和 `README.md` 中。
-- 相关提交：
-  - `851e0a6` [AI-Architect] 完成类结构设计与UML草稿文档
+### Contribution 2: UML Draft and Design Documentation
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Generated text-form UML class diagram based on the final class structure, supplemented relationship descriptions between classes (inheritance, aggregation, association).
+- Human Decision: Accepted the UML description and integrated it into `plan.md` and `README.md`.
+- Related Commits:
+  - `851e0a6` [AI-Architect] complete class structure design and UML draft document
 
 ---
 
-## Implementation Agent（实现代理）
+### Contribution 3: Architecture Description and Association Direction Advice
+- Date: 2026-06-18
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Analyzed the logical relationship between teams and battle history. Confirmed that the unidirectional association design (Player holds Team, Team does not hold Players) avoids circular references and simplifies battle history queries.
+- Human Decision: Based on the discussion, moved team match records to team overview, changed battle history to only display personal battle mode records.
+- Related Commits:
+  - `4f82ffd` [AI-Review] persist battle records to file, add team creation in team overview
 
-### 贡献 1：实体类生成
-- 时间：2026-06-16 ~ 2026-06-17
-- AI 工具：DeepSeek Chat
-- 主要建议：生成了 `Equipment`（含 `EquipmentType` 枚举）、`Hero`（含 `equip/unequip` 和总属性计算）、`Team`（单向关联）、`MatchRecord`（含 `MatchStatus` 枚举）等实体类的完整代码。
-- 人工决策：全部接受，但修改了部分方法签名（如 `unequip` 改为通过 ID 移除）和格式（`getDescription` 输出格式）。
-- 相关提交：
+---
+
+## Implementation Agent
+
+### Contribution 1: Entity Class Generation
+- Date: 2026-06-16 ~ 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Generated complete code for `Equipment` (with `EquipmentType` enum), `Hero` (with equip/unequip and total attribute calculation), `Team` (unidirectional association), `MatchRecord` (with `MatchStatus` enum) entity classes.
+- Human Decision: All accepted. Modified some method signatures (e.g., unequip changed to remove by ID) and format (getDescription output format).
+- Related Commits:
   - `275d808` [AI-Implementation] add Equipment, Hero, Team
   - `f347889` [AI-Implementation] add MatchRecord
-  - `5c1dac5` [AI-Implementation] 实现Person、Player、Admin实体类
+  - `5c1dac5` [AI-Implementation] implement Person, Player, Admin entity classes
 
-### 贡献 2：Service 层实现
-- 时间：2026-06-17
-- AI 工具：DeepSeek Chat
-- 主要建议：生成了 `Searchable` 和 `Persistable` 接口，以及 `HeroServiceImpl`、`TeamServiceImpl`、`MatchServiceImpl` 的实现代码，使用 `HashMap` 作为存储。
-- 人工决策：接受代码，但调整了 `getTeamMembers` 方法的实现（暂时返回空列表并添加 TODO）。
-- 相关提交：
+### Contribution 2: Service Layer Implementation
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Generated `Searchable` and `Persistable` interfaces, and implementation code for `HeroServiceImpl`, `TeamServiceImpl`, `MatchServiceImpl` using `HashMap` for storage.
+- Human Decision: Accepted code. Adjusted getTeamMembers method implementation (temporarily returns empty list with TODO comment).
+- Related Commits:
   - `ebfe683` [AI-Implementation] add Searchable and Persistable interfaces
   - `a1930ff` [AI-Implementation] implement HeroServiceImpl
   - `6f30a20` [AI-Implementation] implement TeamServiceImpl
   - `74ac2d3` [AI-Implementation] implement MatchServiceImpl
 
+### Contribution 3: Main Menu and Data Initialization
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Generated the complete main menu framework (9 options), login logic, and DataInitializer with hardcoded datasets (20 equipment, 15 heroes, 3 teams, 10 players, 10 matches).
+- Human Decision: Accepted code. Gradually replaced hardcoded data with archive loading and expanded all menu functions.
+- Related Commits:
+  - `1607b04` [Human] add DataInitializer with hardcoded dataset
+  - `b73595f` [AI-Implementation] add battle mode, user registration
+
+### Contribution 4: Serialization Persistence
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Created FileStorageUtil and GameData classes using ObjectOutputStream/ObjectInputStream for data serialization persistence. Modified data load/save flow.
+- Human Decision: Accepted code. Added Serializable interface to all entity classes.
+- Related Commits:
+  - `fdbe4b5` [Human] add Serializable, password auth, registration, battle mode, file I/O
+
+### Contribution 5: Ranking Formulas and Equipment Recommendation
+- Date: 2026-06-18
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Implemented new ranking formulas (equipment composite score and player performance score), and equipment recommendation logic based on hero type matching.
+- Human Decision: Accepted code. Manually adjusted formulas multiple times to meet course requirements.
+- Related Commits:
+  - `5f52fe6` [Human] test ranking dynamic and equipment recommendation
+
+### Contribution 6: Battle System Refactoring
+- Date: 2026-06-18
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Expanded battle hero pool from 3 to 15 heroes with unique skills. Refactored battle engine with player turn and AI decision logic.
+- Human Decision: Accepted code. Fixed display-layer bug where only 3 fixed heroes were actually used despite 15 classes being created.
+- Related Commits:
+  - `43aa2a8` [AI-Implementation] expand hero pool to 15 with skills, add AI decision logic
+
 ---
 
-## Testing/Reviewer Agent（测试/审查代理）
+## Testing/Reviewer Agent
 
-### 贡献 1：发现 import 路径错误
-- 时间：2026-06-17
-- AI 工具：DeepSeek Chat
-- 主要发现：`Player.java` 和 `Admin.java` 中引用了 `model.entity.Hero` 和 `model.entity.Team`，但当时 `model.entity` 包尚未创建，导致编译失败。
-- 人工决策：手动修正 import 语句，确保指向正确的包路径。
-- 相关提交：
+### Contribution 1: Found Import Path Errors
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Finding: `Player.java` and `Admin.java` referenced `model.entity.Hero` and `model.entity.Team`, but the `model.entity` package hadn't been created yet, causing compilation failures.
+- Human Decision: Manually fixed import statements to point to correct package paths.
+- Related Commits:
   - `d4c6c44` [Fix] correct import paths for Player and Admin
 
-### 贡献 2：建议增加测试用例
-- 时间：2026-06-17
-- AI 工具：DeepSeek Chat
-- 主要建议：针对玩家查询、队伍概览、英雄详情等核心功能，提供了一组手动测试用例模板（包含输入、预期输出、实际输出）。
-- 人工决策：采纳建议，创建了 `docs/test-cases.md` 并填写了部分测试用例。
-- 相关提交：
-  - （待提交，计划使用 `[AI-Review] add test cases`）
+### Contribution 2: Suggested Adding Test Cases
+- Date: 2026-06-17
+- AI Tool: DeepSeek Chat
+- Main Suggestion: Provided a set of manual test case templates (including input, expected output, actual output) for core features like player query, team overview, hero details.
+- Human Decision: Adopted the suggestion. Created `docs/test-cases.md` and filled in test results.
+- Related Commits:
+  - `bd0456c` [AI-Review] add 3 new test cases: registration, battle mode, password error
+
+### Contribution 3: Login Input Validation
+- Date: 2026-06-18
+- AI Tool: DeepSeek Chat
+- Main Finding: Login screen offered options 1 and 2, but entering other values caused unexpected behavior without feedback.
+- Human Decision: Added input validation on the login screen. Inputs other than 1 or 2 prompt "Invalid selection, please enter 1 or 2." and return to the login screen.
+- Related Commits:
+  - `86dd403` [AI-Review] add input validation for login menu selection
+
+### Contribution 4: Comprehensive Feature Testing
+- Date: 2026-06-18
+- AI Tool: DeepSeek Chat
+- Main Finding: Ran full-feature tests. Found ranking formula didn't match course requirements and team display was missing from player queries.
+- Human Decision: Adjusted ranking formula to use performance score, added team display to player queries, added JOIN command for joining teams.
+- Related Commits:
+  - `e584e71` [Human] add team join feature, display player team in query, verify all features
 
 ---
 
-## 其他备注
-- 所有 AI 生成的代码均经过人工审查和编译验证，确保符合课程要求和 Java 规范。
-- 部分代码（如主菜单的硬编码数据）由人工编写，未依赖 AI
+## Other Notes
+- All AI-generated code was manually reviewed and compilation-verified to ensure compliance with course requirements and Java standards.
+- Some code (e.g., main menu hardcoded data) was manually written without AI assistance.
+- All AI-generated code requiring modifications reflects human review and quality control decisions.
