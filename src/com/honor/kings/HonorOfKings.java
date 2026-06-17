@@ -6,10 +6,15 @@ import com.honor.kings.model.person.Admin;
 import com.honor.kings.model.person.Person;
 import com.honor.kings.service.impl.HeroServiceImpl;
 import com.honor.kings.util.DataInitializer;
+import com.honor.kings.util.FileStorageUtil;
 
 import com.honor.kings.model.entity.Team;
 import com.honor.kings.model.entity.MatchRecord;
 import com.honor.kings.model.entity.Equipment;
+import com.honor.kings.hero.ZhaoYun;
+import com.honor.kings.hero.LiBai;
+import com.honor.kings.hero.DiaoChan;
+import com.honor.kings.battle.Battle;
 import java.util.*;
 
 import java.util.Map.Entry;
@@ -38,6 +43,14 @@ public class HonorOfKings {
         System.out.println("\n==================================");
         System.out.println("        王者荣耀 - 登录");
         System.out.println("==================================");
+        System.out.println("1. 登录");
+        System.out.println("2. 注册");
+        System.out.print("请选择: ");
+        String choice = scanner.nextLine().trim();
+        if ("2".equals(choice)) {
+            showRegister();
+            return;
+        }
         System.out.print("用户名: ");
         String username = scanner.nextLine().trim();
         System.out.print("密码: ");
@@ -50,8 +63,52 @@ public class HonorOfKings {
             currentUser = new Player("P01", "player1", "player1@honor.com", java.time.LocalDateTime.now(), 10, 50, 30);
             System.out.println("登录成功！当前角色: " + currentUser.getRole() + " (" + currentUser.getName() + ")");
         } else {
-            System.out.println("用户名或密码错误，请重试。");
+            boolean found = false;
+            for (Player p : DataInitializer.getAllPlayers()) {
+                if (p.getName().equals(username)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                System.out.println("暂不支持自定义密码登录，请使用 player1/123456 或注册新账号。");
+            } else {
+                System.out.println("用户名或密码错误，请重试。");
+            }
         }
+    }
+
+    private static void showRegister() {
+        System.out.println("\n=== 注册新玩家 ===");
+        System.out.print("请输入用户名: ");
+        String regName = scanner.nextLine().trim();
+        if (regName.isEmpty()) {
+            System.out.println("用户名不能为空。");
+            return;
+        }
+        for (Player p : DataInitializer.getAllPlayers()) {
+            if (p.getName().equals(regName)) {
+                System.out.println("用户名已存在，请重新输入。");
+                return;
+            }
+        }
+        System.out.print("请输入密码（至少4位）: ");
+        String regPwd = scanner.nextLine();
+        if (regPwd.length() < 4) {
+            System.out.println("密码不能少于4位。");
+            return;
+        }
+        String id = "p" + System.currentTimeMillis();
+        Player newPlayer = new Player(id, regName, regName + "@honor.com", LocalDateTime.now(), 1, 0, 0);
+        DataInitializer.getAllPlayers().add(newPlayer);
+        FileStorageUtil.saveAllData(
+                DataInitializer.getAllPlayers(),
+                DataInitializer.getAllHeroes(),
+                DataInitializer.getAllEquipment(),
+                DataInitializer.getAllTeams(),
+                DataInitializer.getAllMatches()
+        );
+        System.out.println("注册成功！请重新登录。");
     }
 
     private static void showMainMenu() {
@@ -68,6 +125,7 @@ public class HonorOfKings {
         System.out.println("7. 数据管理（仅管理员）");
         System.out.println("8. 退出登录");
         System.out.println("9. 退出系统");
+        System.out.println("0. 战斗模式（彩蛋）");
         System.out.print("请选择: ");
 
         String input = scanner.nextLine().trim();
@@ -102,12 +160,16 @@ public class HonorOfKings {
                 System.out.println("已退出登录。");
                 return;
             case "9":
+                saveBeforeExit();
                 System.out.println("感谢游玩，再见！");
                 scanner.close();
                 System.exit(0);
                 break;
+            case "0":
+                startBattleMode();
+                break;
             default:
-                System.out.println("无效输入，请输入1-9之间的数字。");
+                System.out.println("无效输入，请输入0-9之间的数字。");
         }
     }
 
@@ -274,7 +336,11 @@ public class HonorOfKings {
             return;
         }
         List<Entry<String, Integer>> sorted = equipCount.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .sorted((a, b) -> {
+                    int cmp = b.getValue().compareTo(a.getValue());
+                    if (cmp != 0) return cmp;
+                    return equipMap.get(a.getKey()).getName().compareTo(equipMap.get(b.getKey()).getName());
+                })
                 .collect(Collectors.toList());
         System.out.println("装备使用排行榜（前5名）:");
         int rank = 1;
@@ -477,5 +543,48 @@ public class HonorOfKings {
                     System.out.println("无效输入，请输入1-7之间的数字。");
             }
         }
+    }
+
+    private static void saveBeforeExit() {
+        FileStorageUtil.saveAllData(
+                DataInitializer.getAllPlayers(),
+                DataInitializer.getAllHeroes(),
+                DataInitializer.getAllEquipment(),
+                DataInitializer.getAllTeams(),
+                DataInitializer.getAllMatches()
+        );
+    }
+
+    private static void startBattleMode() {
+        System.out.println("\n=== 战斗模式（彩蛋）===");
+        com.honor.kings.hero.Hero[] heroes = {
+            new ZhaoYun(),
+            new LiBai(),
+            new DiaoChan()
+        };
+        for (int i = 0; i < heroes.length; i++) {
+            System.out.println((i + 1) + ". " + heroes[i].getName());
+        }
+        System.out.print("选择第一个英雄 (1-" + heroes.length + "): ");
+        int choice1;
+        int choice2;
+        try {
+            choice1 = Integer.parseInt(scanner.nextLine().trim()) - 1;
+            System.out.print("选择第二个英雄 (1-" + heroes.length + "): ");
+            choice2 = Integer.parseInt(scanner.nextLine().trim()) - 1;
+        } catch (NumberFormatException e) {
+            System.out.println("输入无效");
+            return;
+        }
+        if (choice1 < 0 || choice1 >= heroes.length ||
+            choice2 < 0 || choice2 >= heroes.length) {
+            System.out.println("输入无效");
+            return;
+        }
+        if (choice1 == choice2) {
+            System.out.println("不能选择同一个英雄");
+            return;
+        }
+        new Battle(heroes[choice1], heroes[choice2]).start();
     }
 }
