@@ -1,9 +1,6 @@
 package com.honor.kings.util;
 
-import com.honor.kings.model.entity.Equipment;
-import com.honor.kings.model.entity.Hero;
-import com.honor.kings.model.entity.MatchRecord;
-import com.honor.kings.model.entity.Team;
+import com.honor.kings.model.entity.*;
 import com.honor.kings.model.person.Player;
 
 import java.io.*;
@@ -27,7 +24,7 @@ public class FileStorageUtil {
 
     public static void saveAllData(List<Player> players, List<Hero> heroes,
                                     List<Equipment> equipment, List<Team> teams,
-                                    List<MatchRecord> matches, List<String> battleRecords) {
+                                    List<MatchRecord> matches, List<BattleRecord> battleRecords) {
         try {
             File dir = new File(DATA_DIR);
             if (!dir.exists()) {

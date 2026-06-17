@@ -1,11 +1,12 @@
 package com.honor.kings.util;
 
 import com.honor.kings.model.entity.Equipment;
-import com.honor.kings.model.entity.Equipment.EquipmentType;
+import com.honor.kings.model.entity.Equipment.EquipmentCategory;
 import com.honor.kings.model.entity.Hero;
 import com.honor.kings.model.entity.Team;
 import com.honor.kings.model.entity.MatchRecord;
 import com.honor.kings.model.entity.MatchRecord.MatchStatus;
+import com.honor.kings.model.entity.BattleRecord;
 import com.honor.kings.model.person.Player;
 
 import java.time.LocalDateTime;
@@ -25,7 +26,7 @@ public class DataInitializer {
 
     // 初始化数据：优先从序列化文件加载，加载失败则使用硬编码数据
     // 文件I/O 与 异常处理：FileStorageUtil.loadAllData() 内部已捕获异常
-    public static List<String> initAll() {
+    public static List<BattleRecord> initAll() {
         GameData loaded = FileStorageUtil.loadAllData();
         if (loaded != null) {
             allEquipment = loaded.getEquipment();
@@ -39,7 +40,7 @@ public class DataInitializer {
             System.out.println("队伍: " + allTeams.size() + " 个");
             System.out.println("玩家: " + allPlayers.size() + " 个");
             System.out.println("比赛记录: " + allMatches.size() + " 条");
-            List<String> records = loaded.getBattleRecords();
+            List<BattleRecord> records = loaded.getBattleRecords();
             return records != null ? records : new ArrayList<>();
         }
         System.out.println("未找到存档文件，使用默认数据初始化");
@@ -55,7 +56,7 @@ public class DataInitializer {
         System.out.println("队伍: " + allTeams.size() + " 个");
         System.out.println("玩家: " + allPlayers.size() + " 个");
         System.out.println("比赛记录: " + allMatches.size() + " 条");
-        return new ArrayList<>();
+        return new ArrayList<BattleRecord>();
     }
 
     public static List<Equipment> getAllEquipment() {
@@ -80,26 +81,26 @@ public class DataInitializer {
 
     private static List<Equipment> createEquipment() {
         List<Equipment> list = new ArrayList<>();
-        list.add(new Equipment("E01", "无尽战刃", EquipmentType.WEAPON, 0, 130, 0, 2140));
-        list.add(new Equipment("E02", "破军", EquipmentType.WEAPON, 0, 180, 0, 2950));
-        list.add(new Equipment("E03", "宗师之力", EquipmentType.WEAPON, 0, 80, 0, 2100));
-        list.add(new Equipment("E04", "暗影战斧", EquipmentType.WEAPON, 0, 85, 0, 2090));
-        list.add(new Equipment("E05", "破晓", EquipmentType.WEAPON, 0, 100, 0, 3400));
-        list.add(new Equipment("E06", "红莲斗篷", EquipmentType.ARMOR, 1000, 0, 240, 1830));
-        list.add(new Equipment("E07", "不祥征兆", EquipmentType.ARMOR, 1200, 0, 270, 2180));
-        list.add(new Equipment("E08", "反伤刺甲", EquipmentType.ARMOR, 400, 0, 420, 1860));
-        list.add(new Equipment("E09", "魔女斗篷", EquipmentType.ARMOR, 1000, 0, 200, 2120));
-        list.add(new Equipment("E10", "极寒风暴", EquipmentType.ARMOR, 500, 0, 360, 2100));
-        list.add(new Equipment("E11", "抵抗之靴", EquipmentType.BOOTS, 0, 0, 110, 710));
-        list.add(new Equipment("E12", "影忍之足", EquipmentType.BOOTS, 0, 0, 120, 710));
-        list.add(new Equipment("E13", "冷静之靴", EquipmentType.BOOTS, 0, 0, 0, 710));
-        list.add(new Equipment("E14", "急速战靴", EquipmentType.BOOTS, 0, 0, 0, 710));
-        list.add(new Equipment("E15", "回响之杖", EquipmentType.WEAPON, 0, 240, 0, 2100));
-        list.add(new Equipment("E16", "博学者之怒", EquipmentType.WEAPON, 0, 240, 0, 2300));
-        list.add(new Equipment("E17", "虚无法杖", EquipmentType.WEAPON, 0, 160, 0, 2110));
-        list.add(new Equipment("E18", "贤者之书", EquipmentType.ACCESSORY, 1600, 400, 0, 2990));
-        list.add(new Equipment("E19", "辉月", EquipmentType.ACCESSORY, 0, 160, 0, 1990));
-        list.add(new Equipment("E20", "血魔之怒", EquipmentType.ACCESSORY, 1000, 0, 0, 2120));
+        list.add(new Equipment("E01", "无尽战刃", EquipmentCategory.MAGIC, 0, 130, 0, 2140));
+        list.add(new Equipment("E02", "破军", EquipmentCategory.MAGIC, 0, 180, 0, 2950));
+        list.add(new Equipment("E03", "宗师之力", EquipmentCategory.MAGIC, 0, 80, 0, 2100));
+        list.add(new Equipment("E04", "暗影战斧", EquipmentCategory.MAGIC, 0, 85, 0, 2090));
+        list.add(new Equipment("E05", "破晓", EquipmentCategory.MAGIC, 0, 100, 0, 3400));
+        list.add(new Equipment("E06", "红莲斗篷", EquipmentCategory.TANK, 1000, 0, 240, 1830));
+        list.add(new Equipment("E07", "不祥征兆", EquipmentCategory.TANK, 1200, 0, 270, 2180));
+        list.add(new Equipment("E08", "反伤刺甲", EquipmentCategory.TANK, 400, 0, 420, 1860));
+        list.add(new Equipment("E09", "魔女斗篷", EquipmentCategory.TANK, 1000, 0, 200, 2120));
+        list.add(new Equipment("E10", "极寒风暴", EquipmentCategory.TANK, 500, 0, 360, 2100));
+        list.add(new Equipment("E11", "抵抗之靴", EquipmentCategory.TANK, 0, 0, 110, 710));
+        list.add(new Equipment("E12", "影忍之足", EquipmentCategory.TANK, 0, 0, 120, 710));
+        list.add(new Equipment("E13", "冷静之靴", EquipmentCategory.TANK, 0, 0, 0, 710));
+        list.add(new Equipment("E14", "急速战靴", EquipmentCategory.TANK, 0, 0, 0, 710));
+        list.add(new Equipment("E15", "回响之杖", EquipmentCategory.MAGIC, 0, 240, 0, 2100));
+        list.add(new Equipment("E16", "博学者之怒", EquipmentCategory.MAGIC, 0, 240, 0, 2300));
+        list.add(new Equipment("E17", "虚无法杖", EquipmentCategory.MAGIC, 0, 160, 0, 2110));
+        list.add(new Equipment("E18", "贤者之书", EquipmentCategory.MAGIC, 1600, 400, 0, 2990));
+        list.add(new Equipment("E19", "辉月", EquipmentCategory.MAGIC, 0, 160, 0, 1990));
+        list.add(new Equipment("E20", "血魔之怒", EquipmentCategory.TANK, 1000, 0, 0, 2120));
         return list;
     }
 
@@ -108,28 +109,32 @@ public class DataInitializer {
         Random rand = new Random(42);
 
         String[][] heroData = {
-            {"H01", "赵云", "常山赵子龙", "蜀", "3500", "280", "200"},
-            {"H02", "李白", "青莲剑仙", "唐", "3000", "320", "150"},
-            {"H03", "貂蝉", "绝世舞姬", "东汉", "2800", "340", "130"},
-            {"H04", "关羽", "武圣", "蜀", "3800", "260", "220"},
-            {"H05", "诸葛亮", "卧龙", "蜀", "2900", "350", "140"},
-            {"H06", "韩信", "国士无双", "汉", "3100", "300", "160"},
-            {"H07", "花木兰", "传说之刃", "魏", "3300", "290", "180"},
-            {"H08", "孙尚香", "千金重弩", "吴", "2700", "360", "120"},
-            {"H09", "吕布", "战神", "东汉", "4000", "250", "240"},
-            {"H10", "武则天", "女帝", "唐", "2800", "330", "130"},
-            {"H11", "曹操", "枭雄", "魏", "3600", "270", "190"},
-            {"H12", "周瑜", "大都督", "吴", "2900", "320", "140"},
-            {"H13", "项羽", "霸王", "楚", "4200", "240", "260"},
-            {"H14", "妲己", "魅惑之狐", "商", "2600", "370", "110"},
-            {"H15", "程咬金", "热血战斧", "唐", "4500", "230", "250"},
+            {"H01", "赵云", "常山赵子龙", "蜀", "3500", "280", "200", "WARRIOR"},
+            {"H02", "李白", "青莲剑仙", "唐", "3000", "320", "150", "WARRIOR"},
+            {"H03", "貂蝉", "绝世舞姬", "东汉", "2800", "340", "130", "MAGE"},
+            {"H04", "关羽", "武圣", "蜀", "3800", "260", "220", "WARRIOR"},
+            {"H05", "诸葛亮", "卧龙", "蜀", "2900", "350", "140", "MAGE"},
+            {"H06", "韩信", "国士无双", "汉", "3100", "300", "160", "WARRIOR"},
+            {"H07", "花木兰", "传说之刃", "魏", "3300", "290", "180", "WARRIOR"},
+            {"H08", "孙尚香", "千金重弩", "吴", "2700", "360", "120", "WARRIOR"},
+            {"H09", "吕布", "战神", "东汉", "4000", "250", "240", "WARRIOR"},
+            {"H10", "武则天", "女帝", "唐", "2800", "330", "130", "MAGE"},
+            {"H11", "曹操", "枭雄", "魏", "3600", "270", "190", "WARRIOR"},
+            {"H12", "周瑜", "大都督", "吴", "2900", "320", "140", "MAGE"},
+            {"H13", "项羽", "霸王", "楚", "4200", "240", "260", "WARRIOR"},
+            {"H14", "妲己", "魅惑之狐", "商", "2600", "370", "110", "MAGE"},
+            {"H15", "程咬金", "热血战斧", "唐", "4500", "230", "250", "WARRIOR"},
         };
 
         for (String[] d : heroData) {
+            Hero.HeroType type = Hero.HeroType.valueOf(d[7]);
             Hero hero = new Hero(d[0], d[1], d[2], Integer.parseInt(d[4]), Integer.parseInt(d[5]),
-                    Integer.parseInt(d[6]), d[3], 1);
-            int equipCount = 1 + rand.nextInt(3);
-            for (int i = 0; i < equipCount; i++) {
+                    Integer.parseInt(d[6]), d[3], 1, type);
+            // 先装备一双靴子（E11-E14选一个），再额外装备1-2件对应类别的装备
+            int bootIdx = 10 + rand.nextInt(4);
+            hero.equip(allEquipment.get(bootIdx));
+            int extraCount = 1 + rand.nextInt(2);
+            for (int i = 0; i < extraCount; i++) {
                 hero.equip(allEquipment.get(rand.nextInt(allEquipment.size())));
             }
             list.add(hero);

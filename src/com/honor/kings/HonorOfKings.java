@@ -15,6 +15,7 @@ import com.honor.kings.hero.ZhaoYun;
 import com.honor.kings.hero.LiBai;
 import com.honor.kings.hero.DiaoChan;
 import com.honor.kings.battle.Battle;
+import com.honor.kings.model.entity.BattleRecord;
 import java.util.*;
 
 import java.util.Map.Entry;
@@ -27,8 +28,8 @@ public class HonorOfKings {
     private static Person currentUser;
     private static HeroServiceImpl heroService = new HeroServiceImpl();
     private static Scanner scanner = new Scanner(System.in);
-    // 战斗记录列表：只保留最近 3 场，格式为 "时间 | 对战双方 | 结果"
-    private static List<String> battleRecords;
+    // 战斗记录列表：只保留最近 5 场，含英雄、装备、胜负、时间
+    private static List<BattleRecord> battleRecords;
 
     // 程序入口：先初始化数据，然后循环显示登录或主菜单
     public static void main(String[] args) {
@@ -355,7 +356,7 @@ public class HonorOfKings {
         if (eqList != null && !eqList.isEmpty()) {
             System.out.println("当前装备:");
             for (Equipment eq : eqList) {
-                System.out.println("  - " + eq.getName() + " (" + eq.getType() + ")");
+                System.out.println("  - " + eq.getName() + " (" + eq.getCategory() + ")");
             }
         } else {
             System.out.println("当前装备: 无");
@@ -374,21 +375,74 @@ public class HonorOfKings {
         } else {
             System.out.println("拥有该英雄的玩家: " + String.join(", ", ownerNames));
         }
+        // 装备推荐：根据英雄类型匹配对应类别的装备，按综合分降序推荐前3件
+        Equipment.EquipmentCategory recommendedCategory = found.getHeroType() == com.honor.kings.model.entity.Hero.HeroType.WARRIOR
+                ? Equipment.EquipmentCategory.TANK : Equipment.EquipmentCategory.MAGIC;
+        Map<String, List<Double>> equipWinRates = new HashMap<>();
+        Map<String, Integer> equipCount = new HashMap<>();
+        for (Equipment eq : DataInitializer.getAllEquipment()) {
+            equipWinRates.put(eq.getId(), new ArrayList<>());
+            equipCount.put(eq.getId(), 0);
+        }
+        Map<String, Double> playerWinRateMap = new HashMap<>();
+        for (Player p : DataInitializer.getAllPlayers()) {
+            playerWinRateMap.put(p.getId(), p.getTotalMatches() == 0 ? 0 : p.getWinRate());
+        }
+        for (com.honor.kings.model.entity.Hero h : DataInitializer.getAllHeroes()) {
+            for (Player p : DataInitializer.getAllPlayers()) {
+                if (p.getOwnedHeroes().stream().anyMatch(oh -> oh.getId().equals(h.getId()))) {
+                    double wr = playerWinRateMap.getOrDefault(p.getId(), 0.0);
+                    for (Equipment eq : h.getEquipmentList()) {
+                        equipCount.merge(eq.getId(), 1, Integer::sum);
+                        equipWinRates.get(eq.getId()).add(wr);
+                    }
+                    break;
+                }
+            }
+        }
+        System.out.println("推荐装备 (" + recommendedCategory + " 类, 按综合分排序):");
+        DataInitializer.getAllEquipment().stream()
+                .filter(eq -> eq.getCategory() == recommendedCategory)
+                .map(eq -> {
+                    int count = equipCount.getOrDefault(eq.getId(), 0);
+                    List<Double> rates = equipWinRates.getOrDefault(eq.getId(), new ArrayList<>());
+                    double avgWinRate = rates.isEmpty() ? 0 : rates.stream().mapToDouble(d -> d).average().orElse(0);
+                    double score = count * 0.3 + avgWinRate * 0.7;
+                    return new AbstractMap.SimpleEntry<>(eq, score);
+                })
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(3)
+                .forEach(entry -> {
+                    Equipment eq = entry.getKey();
+                    System.out.println("  - " + eq.getName() + " (综合分: " + String.format("%.1f", entry.getValue()) + ")");
+                });
     }
 
-    // 装备使用次数排名：遍历所有英雄的装备列表，统计每件装备出现次数
-    // 排名公式：使用次数降序 → 次数相同按名称排序 → 取前5名
+    // 装备排名方法：综合分 = 使用次数 * 0.3 + 胜率贡献 * 0.7
+    // 胜率贡献 = 装备该装备的英雄所属玩家的平均胜率
     private static void showEquipmentStats() {
-        // 两个 Map 分别存装备ID→次数 和 装备ID→对象
         Map<String, Integer> equipCount = new HashMap<>();
         Map<String, Equipment> equipMap = new HashMap<>();
+        Map<String, List<Double>> equipWinRates = new HashMap<>();
         for (Equipment eq : DataInitializer.getAllEquipment()) {
             equipMap.put(eq.getId(), eq);
             equipCount.put(eq.getId(), 0);
+            equipWinRates.put(eq.getId(), new ArrayList<>());
+        }
+        Map<String, Double> playerWinRateMap = new HashMap<>();
+        for (Player p : DataInitializer.getAllPlayers()) {
+            playerWinRateMap.put(p.getId(), p.getTotalMatches() == 0 ? 0 : p.getWinRate());
         }
         for (com.honor.kings.model.entity.Hero h : DataInitializer.getAllHeroes()) {
-            for (Equipment eq : h.getEquipmentList()) {
-                equipCount.merge(eq.getId(), 1, Integer::sum);
+            for (Player p : DataInitializer.getAllPlayers()) {
+                if (p.getOwnedHeroes().stream().anyMatch(oh -> oh.getId().equals(h.getId()))) {
+                    double wr = playerWinRateMap.getOrDefault(p.getId(), 0.0);
+                    for (Equipment eq : h.getEquipmentList()) {
+                        equipCount.merge(eq.getId(), 1, Integer::sum);
+                        equipWinRates.get(eq.getId()).add(wr);
+                    }
+                    break;
+                }
             }
         }
         boolean hasData = false;
@@ -399,21 +453,28 @@ public class HonorOfKings {
             System.out.println("暂无装备数据");
             return;
         }
-        // 使用 Stream API 对 Map 按值降序排序，次数相同按装备名称排序
-        // sorted() 自定义比较器：先比次数（降序），次数相同比名称（升序）
-        List<Entry<String, Integer>> sorted = equipCount.entrySet().stream()
+        Map<String, Double> equipScore = new HashMap<>();
+        for (String id : equipCount.keySet()) {
+            int count = equipCount.get(id);
+            List<Double> rates = equipWinRates.get(id);
+            double avgWinRate = rates.isEmpty() ? 0 : rates.stream().mapToDouble(d -> d).average().orElse(0);
+            double score = count * 0.3 + avgWinRate * 0.7;
+            equipScore.put(id, score);
+        }
+        List<Entry<String, Double>> sorted = equipScore.entrySet().stream()
                 .sorted((a, b) -> {
-                    int cmp = b.getValue().compareTo(a.getValue());
+                    int cmp = Double.compare(b.getValue(), a.getValue());
                     if (cmp != 0) return cmp;
                     return equipMap.get(a.getKey()).getName().compareTo(equipMap.get(b.getKey()).getName());
                 })
                 .collect(Collectors.toList());
-        System.out.println("装备使用排行榜（前5名）:");
+        System.out.println("装备综合排行榜（前5名）:");
+        System.out.println("排名公式：综合分 = 使用次数 × 0.3 + 平均胜率 × 0.7");
         int rank = 1;
-        for (Entry<String, Integer> entry : sorted) {
+        for (Entry<String, Double> entry : sorted) {
             if (rank > 5) break;
             Equipment eq = equipMap.get(entry.getKey());
-            System.out.println(rank + ". " + eq.getName() + " (" + eq.getType() + ") - 使用次数: " + entry.getValue());
+            System.out.println(rank + ". " + eq.getName() + " (" + eq.getCategory() + ") - 综合分: " + String.format("%.1f", entry.getValue()));
             rank++;
         }
     }
@@ -423,9 +484,41 @@ public class HonorOfKings {
             System.out.println("暂无对战记录");
             return;
         }
-        System.out.println("战斗模式记录（最近3场）:");
-        for (String r : battleRecords) {
-            System.out.println("  " + r);
+        System.out.println("战斗模式记录（最近5场）:");
+        int wins = 0, losses = 0, draws = 0;
+        Map<String, Integer> heroPickCount = new HashMap<>();
+        Map<String, Integer> equipAppearances = new HashMap<>();
+        Map<String, Integer> equipWins = new HashMap<>();
+        for (BattleRecord r : battleRecords) {
+            System.out.println("  " + r.getTime() + " | " + r.getHero1Name() + " VS " + r.getHero2Name() + " | " + r.getResult());
+            String result = r.getResult();
+            if ("平局".equals(result)) draws++;
+            else wins++;
+            heroPickCount.merge(r.getHero1Name(), 1, Integer::sum);
+            heroPickCount.merge(r.getHero2Name(), 1, Integer::sum);
+            for (String eqName : r.getAllEquipmentNames()) {
+                equipAppearances.merge(eqName, 1, Integer::sum);
+                if (!"平局".equals(result)) {
+                    equipWins.merge(eqName, 1, Integer::sum);
+                }
+            }
+        }
+        int total = battleRecords.size();
+        losses = total - wins - draws;
+        System.out.println("胜负记录: " + wins + "胜 " + losses + "负 " + draws + "平");
+        System.out.println("英雄选用率:");
+        for (Map.Entry<String, Integer> entry : heroPickCount.entrySet()) {
+            double rate = (double) entry.getValue() / total * 100;
+            System.out.println("  " + entry.getKey() + ": " + String.format("%.1f", rate) + "%");
+        }
+        System.out.println("装备出场统计:");
+        for (Map.Entry<String, Integer> entry : equipAppearances.entrySet()) {
+            String eqName = entry.getKey();
+            int appear = entry.getValue();
+            int win = equipWins.getOrDefault(eqName, 0);
+            double appearRate = (double) appear / total * 100;
+            double winRate = (double) win / appear * 100;
+            System.out.println("  " + eqName + " - 出场率: " + String.format("%.1f", appearRate) + "% - 胜场: " + win + "/" + appear);
         }
     }
 
@@ -435,21 +528,18 @@ public class HonorOfKings {
             System.out.println("暂无玩家数据");
             return;
         }
-        // 排行榜排序规则：先按胜率降序排列
-        // 平局处理：总场次为0时胜率设为-1（排在最后）；胜率相同则按总场次降序
-        players.sort((a, b) -> {
-            double rateA = a.getTotalMatches() == 0 ? -1 : a.getWinRate();
-            double rateB = b.getTotalMatches() == 0 ? -1 : b.getWinRate();
-            if (rateB != rateA) {
-                return Double.compare(rateB, rateA);
-            }
-            return Integer.compare(b.getTotalMatches(), a.getTotalMatches());
-        });
+        // 实力分 = 胜率 * 50 + 等级 * 10 - 总场次 * 0.1
+        // 平局处理：分数相同则按等级降序排列
+        players.sort(Comparator.comparingDouble((Player p) ->
+                p.getTotalMatches() == 0 ? -1 : p.getWinRate() * 50 + p.getLevel() * 10 - p.getTotalMatches() * 0.1
+        ).reversed().thenComparing(Comparator.comparingInt(Player::getLevel).reversed()));
         System.out.println("玩家排行榜（前3名）:");
+        System.out.println("排名公式：实力分 = 胜率 × 50 + 等级 × 10 - 总场次 × 0.1");
         for (int i = 0; i < 3 && i < players.size(); i++) {
             Player p = players.get(i);
+            double score = p.getTotalMatches() == 0 ? -1 : p.getWinRate() * 50 + p.getLevel() * 10 - p.getTotalMatches() * 0.1;
             String rateStr = p.getTotalMatches() == 0 ? "N/A" : String.format("%.1f%%", p.getWinRate());
-            System.out.println((i + 1) + ". " + p.getName() + " - 胜率: " + rateStr + " - 总场次: " + p.getTotalMatches() + " - 胜场: " + p.getWinCount());
+            System.out.println((i + 1) + ". " + p.getName() + " - 实力分: " + String.format("%.1f", score) + " - 胜率: " + rateStr + " - 等级: " + p.getLevel() + " - 总场次: " + p.getTotalMatches());
         }
     }
 
@@ -536,11 +626,11 @@ public class HonorOfKings {
                     String eDef = scanner.nextLine().trim();
                     System.out.print("请输入价格: ");
                     String ePrice = scanner.nextLine().trim();
-                    // 枚举解析：EquipmentType.valueOf() 将字符串转为枚举常量
+                    // 枚举解析：EquipmentCategory.valueOf() 将字符串转为枚举常量
                     // 若输入不匹配任一枚举值（如输入"HELMET"），抛出 IllegalArgumentException
                     try {
-                        Equipment.EquipmentType eType = Equipment.EquipmentType.valueOf(eTypeStr.toUpperCase());
-                        Equipment newEq = new Equipment(eId, eName, eType,
+                        Equipment.EquipmentCategory eCategory = Equipment.EquipmentCategory.valueOf(eTypeStr.toUpperCase());
+                        Equipment newEq = new Equipment(eId, eName, eCategory,
                                 Integer.parseInt(eHp), Integer.parseInt(eAtk), Integer.parseInt(eDef), Integer.parseInt(ePrice));
                         DataInitializer.getAllEquipment().add(newEq);
                         System.out.println("操作成功");
@@ -576,27 +666,39 @@ public class HonorOfKings {
 
     private static void startBattleMode() {
         System.out.println("\n=== 战斗模式 ===");
-        com.honor.kings.hero.Hero[] heroes = {
-            new ZhaoYun(),
-            new LiBai(),
-            new DiaoChan()
-        };
-        for (int i = 0; i < heroes.length; i++) {
-            System.out.println((i + 1) + ". " + heroes[i].getName());
+        List<com.honor.kings.model.entity.Hero> allHeroes = DataInitializer.getAllHeroes();
+        System.out.println("可选英雄:");
+        for (int i = 0; i < allHeroes.size(); i++) {
+            System.out.println("  H" + String.format("%02d", i + 1) + " - " + allHeroes.get(i).getName());
         }
-        System.out.print("选择第一个英雄 (1-" + heroes.length + "): ");
+        com.honor.kings.hero.Hero[] battleHeroes = {
+            new ZhaoYun(), new LiBai(), new DiaoChan()
+        };
+        Random rand = new Random();
+        String[] pickNames = new String[3];
+        List<String>[] pickEquipment = new List[3];
+        for (int i = 0; i < 3; i++) {
+            int idx = rand.nextInt(allHeroes.size());
+            com.honor.kings.model.entity.Hero dataHero = allHeroes.get(idx);
+            pickNames[i] = dataHero.getName();
+            pickEquipment[i] = new ArrayList<>();
+            for (Equipment eq : dataHero.getEquipmentList()) {
+                pickEquipment[i].add(eq.getName());
+            }
+            System.out.println("  " + (i + 1) + ". " + pickNames[i] + " (" + dataHero.getTitle() + ")");
+        }
+        System.out.print("选择第一个英雄 (1-3): ");
         int choice1;
         int choice2;
         try {
             choice1 = Integer.parseInt(scanner.nextLine().trim()) - 1;
-            System.out.print("选择第二个英雄 (1-" + heroes.length + "): ");
+            System.out.print("选择第二个英雄 (1-3): ");
             choice2 = Integer.parseInt(scanner.nextLine().trim()) - 1;
         } catch (NumberFormatException e) {
             System.out.println("输入无效");
             return;
         }
-        if (choice1 < 0 || choice1 >= heroes.length ||
-            choice2 < 0 || choice2 >= heroes.length) {
+        if (choice1 < 0 || choice1 >= 3 || choice2 < 0 || choice2 >= 3) {
             System.out.println("输入无效");
             return;
         }
@@ -604,13 +706,14 @@ public class HonorOfKings {
             System.out.println("不能选择同一个英雄");
             return;
         }
-        Battle battle = new Battle(heroes[choice1], heroes[choice2]);
+        Battle battle = new Battle(battleHeroes[choice1], battleHeroes[choice2]);
         battle.start();
         String winner = battle.getWinner();
         String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        String record = timeStr + " | " + heroes[choice1].getName() + " VS " + heroes[choice2].getName() + " | " + winner;
+        BattleRecord record = new BattleRecord(timeStr, pickNames[choice1], pickNames[choice2],
+                pickEquipment[choice1], pickEquipment[choice2], winner);
         battleRecords.add(record);
-        if (battleRecords.size() > 3) {
+        if (battleRecords.size() > 5) {
             battleRecords.remove(0);
         }
     }

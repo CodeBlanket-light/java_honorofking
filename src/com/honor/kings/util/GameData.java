@@ -1,9 +1,6 @@
 package com.honor.kings.util;
 
-import com.honor.kings.model.entity.Equipment;
-import com.honor.kings.model.entity.Hero;
-import com.honor.kings.model.entity.MatchRecord;
-import com.honor.kings.model.entity.Team;
+import com.honor.kings.model.entity.*;
 import com.honor.kings.model.person.Player;
 
 import java.io.Serializable;
@@ -19,7 +16,7 @@ public class GameData implements Serializable {
     private List<Equipment> equipment;
     private List<Team> teams;
     private List<MatchRecord> matches;
-    private List<String> battleRecords;
+    private List<BattleRecord> battleRecords;
 
     public GameData(List<Player> players, List<Hero> heroes, List<Equipment> equipment,
                     List<Team> teams, List<MatchRecord> matches) {
@@ -27,7 +24,7 @@ public class GameData implements Serializable {
     }
 
     public GameData(List<Player> players, List<Hero> heroes, List<Equipment> equipment,
-                    List<Team> teams, List<MatchRecord> matches, List<String> battleRecords) {
+                    List<Team> teams, List<MatchRecord> matches, List<BattleRecord> battleRecords) {
         this.players = players;
         this.heroes = heroes;
         this.equipment = equipment;
@@ -41,5 +38,5 @@ public class GameData implements Serializable {
     public List<Equipment> getEquipment() { return equipment; }
     public List<Team> getTeams() { return teams; }
     public List<MatchRecord> getMatches() { return matches; }
-    public List<String> getBattleRecords() { return battleRecords; }
+    public List<BattleRecord> getBattleRecords() { return battleRecords; }
 }
