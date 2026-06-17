@@ -7,7 +7,7 @@
 最有用的提示词是 Prompt 01（Architect Agent 设计审查）。它在编码开始前就指出了 Team 和 Player 之间双向关联的一致性问题，让我避免了后期大规模重构。采纳单向关联方案（Team 不持有 Player 列表，通过 Player.currentTeam 查询）后，删除队伍不需要同步更新 Player，维护成本大大降低。这个决策贯穿了整个项目，是设计上最关键的正确决定。
 
 ## 3. Which AI-generated suggestion was wrong, incomplete, or misleading?
-在战斗系统重构时，AI 建议创建 12 个新英雄类（关羽、诸葛亮等），每个英雄 3 个专属技能。这个建议本身很好，但 AI 生成的技能数据与英雄人设匹配度不够高（如周瑜的技能名称不符合历史形象），我手动修改了部分技能名称和伤害值。此外，AI 在生成排行榜功能时最初使用的是"实力分"公式（胜率×50+等级×10-总场次×0.1），但课程要求的是直接按胜率降序排列，我后来改为使用 Comparator.comparing(Player::getWinRate).reversed() 和 thenComparing() 实现多级排序。
+在战斗系统重构时，AI 建议创建 12 个新英雄类（关羽、诸葛亮等），每个英雄 3 个专属技能。这个建议本身很好，但 AI 生成的技能数据与英雄人设匹配度不够高（如周瑜的技能名称不符合历史形象），我手动修改了部分技能名称和伤害值。此外，AI 在生成排行榜功能时最初使用的是"实力分"公式（胜率×50+等级×10-总场次×0.1），但课程要求的是按胜率降序排列，我后来改为使用 Comparator 链式排序，又调整为表现分公式（胜场×3-负场×1+等级×2）。另外，在添加注册功能时，AI 生成的代码在编辑注释时误删了 `new Player(...)` 的变量声明行，导致编译报错，我通过 git checkout 恢复文件后重新编辑才修复。
 
 ## 4. How did you check whether AI-generated code was correct?
 我主要采用以下方式验证：
@@ -21,7 +21,7 @@
 - **胜率计算 Bug**：DataInitializer 中玩家的 winCount 可能超过 totalMatches（如 winCount=131, totalMatches=49），导致胜率超过 100%。我手动修正了初始化逻辑，确保 winCount ≤ totalMatches。
 - **编码问题**：在 Windows cmd 下中文显示乱码，搜索"梦泪"返回"未找到该玩家"。我通过添加 `chcp 65001` 切换 UTF-8 编码解决，并在 README 中说明。
 - **英雄数据索引错位**：DataInitializer 中英雄数据数组的阵营字段和数值字段索引不对应，导致 Integer.parseInt 解析中文字符串失败。我手动修复了数组索引。
-- **排行榜公式不符课程要求**：AI 最初实现了自定义"实力分"公式，我改为按胜率降序 + 总场次降序的多级排序，使用 Comparator 链式调用。
+- **排行榜公式多次调整**：AI 最初实现了"实力分"公式（胜率×50+等级×10-总场次×0.1），我改为按胜率降序排序，后又调整为由己的"表现分"公式（胜场×3-负场×1+等级×2）。
 - **战斗记录类型变更**：从 String 列表改为 BattleRecord 对象时，GameData 和 FileStorageUtil 的类型未同步更新，我手动修正了所有引用的类型声明。
 
 ## 6. What Java concept did you understand better after using AI?
@@ -54,3 +54,4 @@
 - **战斗英雄类**：12 个新英雄类（关羽、诸葛亮等）的创建及 3 个技能的初始数据。
 - **序列化工具**：`FileStorageUtil`、`GameData` 的框架代码。
 - **UML 类图**：Mermaid 格式的 UML 图生成。
+- **主菜单框架**：`HonorOfKings.java` 的初始菜单框架和登录逻辑（后续人工扩展了所有功能实现）。
