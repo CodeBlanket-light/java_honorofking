@@ -63,7 +63,7 @@ Tool/Model: DeepSeek Chat / DeepSeek-V3
 Agent Role: Implementation Agent  
 Related Commit: f347889
 
-My Prompt**:
+My Prompt:
 请创建 `com.honor.kings.model.entity.Team` 类，采用单向关联（Team 不持有 Player 列表）。属性：id、teamName、maxMembers、score、foundedTime。提供构造器、getter/setter。只生成这个类。
 
 AI Response Summary:
@@ -80,7 +80,7 @@ Tool/Model: DeepSeek Chat / DeepSeek-V3
 Agent Role: Implementation Agent  
 Related Commit: f347889
 
-My Prompt**:
+My Prompt:
 请创建 `com.honor.kings.model.entity.MatchRecord` 类，包含内部枚举 `MatchStatus { SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED }`。属性：id、teamA、teamB、scoreA、scoreB、winner、duration、matchTime、status。方法：determineWinner()、getMatchSummary()。只生成这个类。
 
 AI Response Summary:
@@ -109,8 +109,8 @@ My Decision:
 
 ## Prompt 07
 
-Time**: 2026-06-17 14:00  
-pool/Model: DeepSeek Chat / DeepSeek-V3  
+Time: 2026-06-17 14:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
 Agent Role: Implementation Agent  
 Related Commit: bdaf58c
 
@@ -120,7 +120,7 @@ My Prompt:
 AI Response Summary:
 AI 生成了完整的主类，包含硬编码的玩家和英雄示例数据、登录逻辑（admin/admin123, player1/123456）、角色权限控制、菜单循环和输入处理。
 
-My Decision**:
+My Decision:
 接受代码。后续将逐步把硬编码数据替换为 DataInitializer + Service 调用。
 
 
@@ -131,10 +131,283 @@ Tool/Model: DeepSeek Chat / DeepSeek-V3
 Agent Role: Testing/Reviewer Agent  
 Related Commit: d4c6c44
 
-My Prompt**:
+My Prompt:
 请以 Testing/Reviewer Agent 的角色审查我的代码。当前编译报错，Player.java 和 Admin.java 无法找到 model.entity.Hero 和 Team。请分析原因并给出修复建议。
 
-AI Response Summary**:
+AI Response Summary:
 AI 指出问题：Player 和 Admin 引用了 `model.entity.Hero`，但项目中没有 `model.entity` 包（实体类放在别处或尚未创建）。建议将实体类移到正确的包路径，或修正 import 语句。
-*My Decision**:
+
+My Decision:
 修正 Player.java 和 Admin.java 的 import 语句，改为 `import com.honor.kings.model.entity.Hero;` 和 `import com.honor.kings.model.entity.Team;`。
+
+
+## Prompt 09
+
+Time: 2026-06-17 18:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: 1607b04
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.util.DataInitializer 类，添加以下功能：将 initAll() 方法中创建的所有玩家、英雄、装备、队伍、比赛记录保存为静态成员变量，提供对应的静态 getter 方法。
+
+AI Response Summary:
+AI 在 DataInitializer 中添加了 5 个静态 List 字段和对应的 getter 方法，getter 在 initAll() 未调用时返回空列表而非 null。
+
+My Decision:
+接受代码。
+
+
+## Prompt 10
+
+Time: 2026-06-17 18:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 2（玩家查询），替换为：提示用户输入玩家姓名，调用 DataInitializer.getAllPlayers() 遍历匹配，显示玩家姓名、等级、胜率、拥有的英雄及装备。
+
+AI Response Summary:
+AI 实现了 queryPlayer() 方法，按姓名忽略大小写匹配，显示详细信息或"未找到该玩家"。
+
+My Decision:
+接受代码。
+
+
+## Prompt 11
+
+Time: 2026-06-17 19:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 2（队伍概览），替换为：提示输入队伍名称或 ID，显示队伍名称、分数、成员列表、平均等级、总比赛场次、胜率、队内最强玩家。
+
+AI Response Summary:
+AI 实现了 queryTeam() 方法，按名称或 ID 匹配，遍历所有 Player 找成员，遍历 MatchRecord 统计比赛。
+
+My Decision:
+接受代码。
+
+
+## Prompt 12
+
+Time: 2026-06-17 19:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 3（英雄详情），替换为：提示输入英雄名称，显示英雄名称、称号、阵营、基础/总属性、装备列表、拥有该英雄的玩家。
+
+AI Response Summary:
+AI 实现了 queryHeroDetail() 方法，显示完整英雄信息。
+
+My Decision:
+接受代码。
+
+
+## Prompt 13
+
+Time: 2026-06-17 20:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 4（装备统计），替换为：遍历所有英雄统计每件装备被使用次数，按降序显示前 5 名。
+
+AI Response Summary:
+AI 实现了 showEquipmentStats() 方法，使用 Map<Equipment, Integer> 统计，按次数降序排列。
+
+My Decision:
+接受代码。
+
+
+## Prompt 14
+
+Time: 2026-06-17 20:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 5（对战历史），替换为：提示输入玩家姓名，显示该玩家最近 5 场比赛记录。
+
+AI Response Summary:
+AI 实现了 showMatchHistory() 方法，通过 player.getCurrentTeam() 匹配比赛，按时间降序显示。
+
+My Decision:
+接受代码。
+
+
+## Prompt 15
+
+Time: 2026-06-17 21:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 6（排行榜），替换为：按胜率降序排列显示前 3 名玩家。
+
+AI Response Summary:
+AI 实现了 showRanking() 方法，胜率相同按总场次降序，总场次为 0 时显示 N/A。
+
+My Decision:
+接受代码。
+
+
+## Prompt 16
+
+Time: 2026-06-17 21:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: af26235
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 主菜单中的 case 7（数据管理），替换为：管理员子菜单，包含添加/删除玩家、英雄、装备功能。
+
+AI Response Summary:
+AI 实现了 showDataManagement() 方法，管理员可增删玩家/英雄/装备，使用 try-catch 处理输入异常。
+
+My Decision:
+接受代码。
+
+
+## Prompt 17
+
+Time: 2026-06-17 22:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: fdbe4b5
+
+My Prompt:
+Java 实现代理，请为我的项目添加数据持久化功能，创建 FileStorageUtil.java 和 GameData.java，使用序列化保存/加载数据。
+
+AI Response Summary:
+AI 生成了 FileStorageUtil（saveAllData/loadAllData）和 GameData 封装类，修改 DataInitializer 优先加载存档，修改 HonorOfKings 退出时保存。
+
+My Decision:
+接受代码。所有实体类需要实现 Serializable。
+
+
+## Prompt 18
+
+Time: 2026-06-17 22:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: fdbe4b5
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 中的登录逻辑，使其支持所有已注册的玩家账号登录，用户名存在但密码错误提示"密码错误"，用户名不存在提示"用户名不存在"。
+
+AI Response Summary:
+AI 给 Player 类添加了 password 字段，修改登录逻辑遍历玩家列表匹配，admin 保持硬编码 Admin 角色。
+
+My Decision:
+接受代码。
+
+
+## Prompt 19
+
+Time: 2026-06-17 23:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: b73595f
+
+My Prompt:
+Java 实现代理，请为我的王者荣耀信息管理系统添加用户注册功能和战斗模式彩蛋。
+
+AI Response Summary:
+AI 在登录界面增加了注册选项（用户名+密码），在主菜单增加了战斗模式选项 0（选择两个英雄对战）。
+
+My Decision:
+接受代码。
+
+
+## Prompt 20
+
+Time: 2026-06-17 23:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Documentation Agent  
+Related Commit: f3e932b
+
+My Prompt:
+请根据项目内容更新 README.md，确保包含课程要求的 8 个部分，补充 AI Usage Summary、Testing Summary、Known Limitations。
+
+AI Response Summary:
+AI 更新了 README.md，补充了运行说明、登录账号、8 个功能说明、Java 概念使用、AI 协作记录、测试用例汇总和已知限制。
+
+My Decision:
+接受代码。
+
+
+## Prompt 21
+
+Time: 2026-06-17 23:45  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Documentation Agent  
+Related Commit: f3e932b
+
+My Prompt:
+请在 README.md 的 Java Concepts Used 部分，补充多态的三点说明：方法重写、运行时类型、接口多态。
+
+AI Response Summary:
+AI 更新了多态行，明确列出三点：方法重写（Player/Admin 重写 getRole）、运行时类型（instanceof Admin）、接口多态（ServiceImpl 实现接口）。
+
+My Decision:
+接受代码。
+
+
+## Prompt 22
+
+Time: 2026-06-18 00:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Implementation Agent  
+Related Commit: 4f82ffd
+
+My Prompt:
+Java 实现代理，请修改 com.honor.kings.HonorOfKings.java 中的战斗模式，战斗结果存入持久化，只保留最近 3 场，在对战历史中显示。
+
+AI Response Summary:
+AI 修改了 Battle 类增加 getWinner() 方法，GameData/FileStorageUtil 增加 battleRecords 字段，HonorOfKings 中战斗记录持久化保存。
+
+My Decision:
+接受代码。
+
+
+## Prompt 23
+
+Time: 2026-06-18 00:30  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Architect Agent  
+Related Commit: 4f82ffd
+
+My Prompt:
+Architect 和我描述一下队伍与对战历史之间的逻辑关系。
+
+AI Response Summary:
+AI 解释了 Player→Team 单向关联、MatchRecord 关联两个 Team、队伍概览遍历 MatchRecord 统计比赛、对战历史通过 player.getCurrentTeam() 查询比赛。
+
+My Decision:
+根据讨论调整了对战历史逻辑，改为只显示个人的战斗模式记录，队伍的比赛记录移至队伍概览显示。
+
+
+## Prompt 24
+
+Time: 2026-06-18 01:00  
+Tool/Model: DeepSeek Chat / DeepSeek-V3  
+Agent Role: Testing/Reviewer Agent  
+Related Commit: bd0456c
+
+My Prompt:
+AI Reviewer，请检查 docs/test-cases.md 测试用例。
+
+AI Response Summary:
+AI 发现 TC-09 预期输出与当前代码逻辑不一致（admin 错误密码应输出"用户名不存在"），建议修正。补充了 3 个新测试用例（注册、战斗模式、密码错误）。
+
+My Decision:
+新增 TC-11~TC-13 测试用例，以 [AI-Review] 提交。
