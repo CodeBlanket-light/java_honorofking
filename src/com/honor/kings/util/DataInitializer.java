@@ -11,6 +11,10 @@ import com.honor.kings.model.person.Player;
 import java.time.LocalDateTime;
 import java.util.*;
 
+// DataInitializer：数据初始化工具类
+// 职责：生成初始硬编码数据集（10玩家/15英雄/20装备/3队伍/10比赛）
+// 文件I/O：initAll() 优先尝试从序列化文件加载，失败则使用硬编码数据
+// 集合：使用 ArrayList 和 Random 生成测试数据
 public class DataInitializer {
 
     private static List<Equipment> allEquipment;

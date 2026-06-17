@@ -3,6 +3,10 @@ package com.honor.kings.model.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// MatchRecord：比赛记录实体类
+// 关联：关联两个 Team 对象（teamA 和 teamB），表示对战双方
+// 枚举：内部枚举 MatchStatus 定义比赛状态（SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED）
+// 文件I/O：实现 Serializable 以便序列化
 public class MatchRecord implements Serializable {
     private static final long serialVersionUID = 1L;
     public enum MatchStatus {

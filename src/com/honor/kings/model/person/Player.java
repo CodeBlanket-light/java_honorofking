@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Player：Person 的子类，代表游戏玩家（继承）
+// 关联：聚合多个 Hero 对象（List<Hero>），单向关联 Team
+// 集合：使用 List<Hero> 存储拥有的英雄
 public class Player extends Person {
     private String password;
     private int level;

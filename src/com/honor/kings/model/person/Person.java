@@ -3,6 +3,10 @@ package com.honor.kings.model.person;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// 继承：Person 是抽象基类，Player 和 Admin 继承自它
+// 多态：getRole() 为抽象方法，子类分别返回 "Player" 和 "Admin"
+// 封装：所有字段为 private，通过 getter/setter 访问
+// 文件I/O：实现 Serializable 以便序列化保存
 public abstract class Person implements Serializable {
     private static final long serialVersionUID = 1L;
     private String id;

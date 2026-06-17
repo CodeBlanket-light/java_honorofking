@@ -6,6 +6,9 @@ import com.honor.kings.model.person.Player;
 
 import java.time.LocalDateTime;
 
+// Admin：Person 的子类，代表管理员（继承）
+// 多态：getRole() 返回 "Admin"，与 Player 的 "Player" 不同
+// 职责：拥有数据管理权限（增删改玩家、英雄、装备）
 public class Admin extends Person {
     private String permissionLevel;
     private String department;

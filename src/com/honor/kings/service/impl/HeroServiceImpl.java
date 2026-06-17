@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// 接口多态：HeroServiceImpl 同时实现 Searchable<Hero> 和 Persistable<Hero>
+// 集合：使用 HashMap<String, Hero> 作为内存存储
+// 职责：管理英雄的增删改查、按名称搜索、装备操作
 public class HeroServiceImpl implements Searchable<Hero>, Persistable<Hero> {
 
     private Map<String, Hero> storage = new HashMap<>();

@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// 接口多态：TeamServiceImpl 同时实现 Searchable<Team> 和 Persistable<Team>
+// 集合：使用 HashMap<String, Team> 作为内存存储
+// 职责：管理队伍的增删改查、按名称搜索、队伍排名
 public class TeamServiceImpl implements Searchable<Team>, Persistable<Team> {
 
     private Map<String, Team> storage = new HashMap<>();

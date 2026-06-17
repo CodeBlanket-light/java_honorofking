@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// 接口多态：MatchServiceImpl 实现 Persistable<MatchRecord>（仅需 CRUD，不需要搜索）
+// 集合：使用 HashMap<String, MatchRecord> 作为内存存储
+// 职责：管理比赛记录的增删改查、开始/结束比赛、胜率统计
 public class MatchServiceImpl implements Persistable<MatchRecord> {
 
     private Map<String, MatchRecord> storage = new HashMap<>();

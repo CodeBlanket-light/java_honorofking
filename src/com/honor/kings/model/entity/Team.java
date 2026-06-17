@@ -3,6 +3,10 @@ package com.honor.kings.model.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// Team：队伍实体类
+// 关联：Player 单向关联 Team（Player 持有 currentTeam，Team 不持有成员列表）
+// 成员查询：通过 PlayerService 按 teamId 查询，避免双向一致性问题
+// 文件I/O：实现 Serializable 以便序列化
 public class Team implements Serializable {
     private static final long serialVersionUID = 1L;
     private String id;

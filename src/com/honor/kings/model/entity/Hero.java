@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+// Hero：英雄实体类（非抽象），代表可玩英雄
+// 聚合：持有 List<Equipment>，一个英雄可装备多件装备（聚合关系）
+// 集合：使用 List<Equipment> 存储装备列表
+// 文件I/O：实现 Serializable 以便序列化
 public class Hero implements Serializable {
     private static final long serialVersionUID = 1L;
     private String id;

@@ -2,6 +2,10 @@ package com.honor.kings.model.entity;
 
 import java.io.Serializable;
 
+// Equipment：装备实体类
+// 枚举：内部枚举 EquipmentType 定义装备类型（WEAPON/ARMOR/BOOTS/ACCESSORY）
+// 聚合：被 Hero 通过 List<Equipment> 聚合引用
+// 文件I/O：实现 Serializable 以便序列化
 public class Equipment implements Serializable {
     private static final long serialVersionUID = 1L;
     public enum EquipmentType {
