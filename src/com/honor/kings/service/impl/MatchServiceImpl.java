@@ -11,34 +11,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// 接口多态：MatchServiceImpl 实现 Persistable<MatchRecord>（仅需 CRUD，不需要搜索）
-// 集合：使用 HashMap<String, MatchRecord> 作为内存存储
-// 职责：管理比赛记录的增删改查、开始/结束比赛、胜率统计
+/**
+ * MatchServiceImpl：比赛记录业务逻辑实现类
+ * 演示：接口多态（实现 Persistable<MatchRecord>）、集合（HashMap）、
+ *       异常处理（方法中通过判空处理 null 场景）
+ */
 public class MatchServiceImpl implements Persistable<MatchRecord> {
 
+    /** 内存存储：以比赛 ID 为键，MatchRecord 对象为值 */
     private Map<String, MatchRecord> storage = new HashMap<>();
 
+    /** 保存比赛记录到 storage */
     @Override
     public boolean save(MatchRecord entity) {
         storage.put(entity.getId(), entity);
         return true;
     }
 
+    /** 根据 ID 查找比赛记录 */
     @Override
     public MatchRecord findById(String id) {
         return storage.get(id);
     }
 
+    /** 根据 ID 删除比赛记录 */
     @Override
     public boolean delete(String id) {
         return storage.remove(id) != null;
     }
 
+    /** 返回所有比赛记录 */
     @Override
     public List<MatchRecord> findAll() {
         return new ArrayList<>(storage.values());
     }
 
+    /** 开始一场新比赛：创建 MatchRecord，状态设为 SCHEDULED */
     public void startMatch(Team teamA, Team teamB) {
         String id = "M" + System.currentTimeMillis();
         MatchRecord match = new MatchRecord(id, teamA, teamB, 0, 0,
@@ -46,6 +54,7 @@ public class MatchServiceImpl implements Persistable<MatchRecord> {
         storage.put(id, match);
     }
 
+    /** 结束比赛：设置双方比分和状态，调用 determineWinner() 确定胜者 */
     public void finishMatch(String matchId, int scoreA, int scoreB) {
         MatchRecord match = storage.get(matchId);
         if (match == null) return;
@@ -55,11 +64,13 @@ public class MatchServiceImpl implements Persistable<MatchRecord> {
         match.determineWinner();
     }
 
+    /** 获取指定玩家的比赛历史（占位方法，暂返回所有记录） */
     public List<MatchRecord> getPlayerMatchHistory(Player player) {
         // TODO: filter by player's team membership
         return new ArrayList<>(storage.values());
     }
 
+    /** 计算指定队伍的胜率（胜场 / 总场次），未参与任何比赛时返回 0.0 */
     public double getTeamWinRate(Team team) {
         int total = 0;
         int wins = 0;

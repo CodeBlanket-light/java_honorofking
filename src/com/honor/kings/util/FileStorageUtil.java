@@ -6,9 +6,12 @@ import com.honor.kings.model.person.Player;
 import java.io.*;
 import java.util.List;
 
-// 文件I/O 工具类：使用 Java 序列化实现数据持久化
-// ObjectOutputStream / ObjectInputStream 将对象写入/读出 .ser 文件
-// 所有实体类已实现 Serializable 接口，确保可序列化
+/**
+ * FileStorageUtil：文件 I/O 工具类
+ * 演示：文件I/O（ObjectOutputStream / ObjectInputStream 序列化）、
+ *       异常处理（IOException / ClassNotFoundException）
+ * 职责：将游戏数据序列化到 data/game_data.ser，或从该文件反序列化加载
+ */
 public class FileStorageUtil {
 
     private static final String DATA_DIR = "data";
@@ -22,6 +25,9 @@ public class FileStorageUtil {
         saveAllData(players, heroes, equipment, teams, matches, new java.util.ArrayList<>());
     }
 
+    // saveAllData（重载）：包含战斗记录的完整保存方法
+    // 异常处理：try-with-resources 自动关闭 ObjectOutputStream
+    // 文件I/O：写入 data/game_data.ser 文件
     public static void saveAllData(List<Player> players, List<Hero> heroes,
                                     List<Equipment> equipment, List<Team> teams,
                                     List<MatchRecord> matches, List<BattleRecord> battleRecords) {

@@ -3,12 +3,14 @@ package com.honor.kings.model.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-// MatchRecord：比赛记录实体类
-// 关联：关联两个 Team 对象（teamA 和 teamB），表示对战双方
-// 枚举：内部枚举 MatchStatus 定义比赛状态（SCHEDULED/IN_PROGRESS/FINISHED/CANCELLED）
-// 文件I/O：实现 Serializable 以便序列化
+/**
+ * MatchRecord 实体类：代表一场比赛记录
+ * 演示：关联（持有两个 Team 对象）、枚举（MatchStatus）、
+ *       文件I/O（Serializable）
+ */
 public class MatchRecord implements Serializable {
     private static final long serialVersionUID = 1L;
+    /** 枚举：比赛状态 — SCHEDULED（已排期）/ IN_PROGRESS（进行中）/ FINISHED（已结束）/ CANCELLED（已取消） */
     public enum MatchStatus {
         SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED
     }
@@ -25,6 +27,7 @@ public class MatchRecord implements Serializable {
 
     public MatchRecord() {}
 
+    /** 构造器：初始化比赛记录并自动调用 determineWinner() 确定胜者 */
     public MatchRecord(String id, Team teamA, Team teamB, int scoreA, int scoreB, String duration, LocalDateTime matchTime, MatchStatus status) {
         this.id = id;
         this.teamA = teamA;
@@ -37,6 +40,7 @@ public class MatchRecord implements Serializable {
         determineWinner();
     }
 
+    /** 根据双方比分决定胜者：比分高的一方获胜，平局时 winner 设为 null */
     public void determineWinner() {
         if (scoreA > scoreB) {
             winner = teamA;
@@ -47,6 +51,7 @@ public class MatchRecord implements Serializable {
         }
     }
 
+    /** 生成比赛摘要字符串，格式如 "蜀 VS 唐, 3:2, 蜀 wins" */
     public String getMatchSummary() {
         String teamAName = (teamA != null) ? teamA.getTeamName() : "Unknown";
         String teamBName = (teamB != null) ? teamB.getTeamName() : "Unknown";

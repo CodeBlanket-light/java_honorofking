@@ -3,10 +3,10 @@ package com.honor.kings.model.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-// Team：队伍实体类
-// 关联：Player 单向关联 Team（Player 持有 currentTeam，Team 不持有成员列表）
-// 成员查询：通过 PlayerService 按 teamId 查询，避免双向一致性问题
-// 文件I/O：实现 Serializable 以便序列化
+/**
+ * Team 实体类：代表游戏中的队伍
+ * 演示：关联（被 Player 单向关联）、文件I/O（Serializable）、封装
+ */
 public class Team implements Serializable {
     private static final long serialVersionUID = 1L;
     private String id;
@@ -17,6 +17,7 @@ public class Team implements Serializable {
 
     public Team() {}
 
+    /** 构造器：初始化队伍的 ID、名称、最大人数、分数和创建时间 */
     public Team(String id, String teamName, int maxMembers, int score, LocalDateTime foundedTime) {
         this.id = id;
         this.teamName = teamName;
@@ -25,10 +26,12 @@ public class Team implements Serializable {
         this.foundedTime = foundedTime;
     }
 
+    /** 判断队伍是否已满（占位方法，始终返回 false） */
     public boolean isFull() {
         return false;
     }
 
+    /** 获取队伍平均等级（占位方法，始终返回 0） */
     public int getAvgLevel() {
         return 0;
     }

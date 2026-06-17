@@ -6,8 +6,11 @@ import com.honor.kings.model.person.Player;
 import java.io.Serializable;
 import java.util.List;
 
-// 文件I/O 封装对象：用于序列化/反序列化所有游戏数据
-// Serializable 接口标记该类可被 ObjectOutputStream 写入文件
+/**
+ * GameData：数据封装对象，用于序列化/反序列化全部游戏数据
+ * 演示：文件I/O（作为 ObjectOutputStream 的写入对象，实现 Serializable）
+ * 内容：玩家、英雄、装备、队伍、比赛记录、战斗记录六类数据
+ */
 public class GameData implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -18,6 +21,7 @@ public class GameData implements Serializable {
     private List<MatchRecord> matches;
     private List<BattleRecord> battleRecords;
 
+    // 构造器：传入5个列表（不含战斗记录），战斗记录初始化为空列表
     public GameData(List<Player> players, List<Hero> heroes, List<Equipment> equipment,
                     List<Team> teams, List<MatchRecord> matches) {
         this(players, heroes, equipment, teams, matches, new java.util.ArrayList<>());

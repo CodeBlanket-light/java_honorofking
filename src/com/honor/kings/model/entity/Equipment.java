@@ -2,13 +2,14 @@ package com.honor.kings.model.entity;
 
 import java.io.Serializable;
 
-// Equipment：装备实体类
-// 枚举：内部枚举 EquipmentCategory 定义装备类别（TANK肉装/MAGIC法装）
-// 聚合：被 Hero 通过 List<Equipment> 聚合引用
-// 推荐逻辑：WARRIOR 英雄推荐 TANK 装备，MAGE 英雄推荐 MAGIC 装备
-// 文件I/O：实现 Serializable 以便序列化
+/**
+ * Equipment 实体类：代表游戏中的装备
+ * 演示：枚举（EquipmentCategory 定义 TANK/MAGIC 两类）、
+ *       聚合（被 Hero 的 List<Equipment> 引用）、文件I/O（Serializable）
+ */
 public class Equipment implements Serializable {
     private static final long serialVersionUID = 1L;
+    /** 枚举：装备类别，TANK（物理防御装）/ MAGIC（法术输出装） */
     public enum EquipmentCategory {
         TANK, MAGIC
     }
@@ -23,6 +24,7 @@ public class Equipment implements Serializable {
 
     public Equipment() {}
 
+    /** 构造器：初始化装备的所有属性（ID、名称、类别、属性加成、价格） */
     public Equipment(String id, String name, EquipmentCategory category, int bonusHp, int bonusAttack, int bonusDefense, int price) {
         this.id = id;
         this.name = name;
@@ -48,6 +50,7 @@ public class Equipment implements Serializable {
     public int getPrice() { return price; }
     public void setPrice(int price) { this.price = price; }
 
+    // getDescription：返回装备的文本描述，含名称、类别、属性加成
     public String getDescription() {
         return name + " (" + category + ") +HP:" + bonusHp + " +ATK:" + bonusAttack + " +DEF:" + bonusDefense;
     }
