@@ -210,6 +210,7 @@ public class HonorOfKings {
             if (player.getName().equalsIgnoreCase(name)) {
                 System.out.println("姓名: " + player.getName());
                 System.out.println("等级: " + player.getLevel());
+                System.out.println("所属队伍: " + (player.getCurrentTeam() != null ? player.getCurrentTeam().getTeamName() : "无"));
                 System.out.println("胜率: " + String.format("%.1f", player.getWinRate()) + "%");
                 System.out.println("拥有英雄:");
                 for (Hero hero : player.getOwnedHeroes()) {
@@ -238,7 +239,8 @@ public class HonorOfKings {
             System.out.println("  " + t.getId() + " - " + t.getTeamName());
         }
         System.out.println("你也可以输入 NEW 创建一个新队伍");
-        System.out.print("请输入要查询的队伍名称或ID: ");
+        System.out.println("输入队伍名称/ID 查询详情；输入 JOIN + 队伍ID 加入该队伍（如 JOIN T99）");
+        System.out.print("请输入: ");
         String input = scanner.nextLine().trim();
         if (input.isEmpty()) {
             System.out.println("输入不能为空");
@@ -255,7 +257,31 @@ public class HonorOfKings {
             }
             Team newTeam = new Team(newId, newName, 10, 0, LocalDateTime.now());
             DataInitializer.getAllTeams().add(newTeam);
-            System.out.println("队伍已创建！");
+            if (currentUser instanceof Player) {
+                ((Player) currentUser).setCurrentTeam(newTeam);
+                System.out.println("队伍已创建！你已自动加入该队伍。");
+            } else {
+                System.out.println("队伍已创建！");
+            }
+            return;
+        }
+        if (input.toUpperCase().startsWith("JOIN ")) {
+            String joinId = input.substring(5).trim();
+            Team joinTeam = null;
+            for (Team t : DataInitializer.getAllTeams()) {
+                if (t.getId().equalsIgnoreCase(joinId)) {
+                    joinTeam = t;
+                    break;
+                }
+            }
+            if (joinTeam == null) {
+                System.out.println("未找到该队伍");
+            } else if (!(currentUser instanceof Player)) {
+                System.out.println("仅玩家可以加入队伍");
+            } else {
+                ((Player) currentUser).setCurrentTeam(joinTeam);
+                System.out.println("你已加入队伍 [" + joinTeam.getTeamName() + "]");
+            }
             return;
         }
         Team found = null;
