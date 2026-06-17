@@ -7,6 +7,7 @@ public class Battle {
     private Hero hero1;
     private Hero hero2;
     private Random random;
+    private String winner;
 
     public Battle(Hero hero1, Hero hero2) {
         this.hero1 = hero1;
@@ -36,15 +37,21 @@ public class Battle {
             }
 
             if (!defender.isAlive()) {
-                System.out.println("\n========== " + attacker.getName() + " 获胜！==========");
+                winner = attacker.getName();
+                System.out.println("\n========== " + winner + " 获胜！==========");
                 return;
             }
 
             round++;
             if (round > 30) {
+                winner = "平局";
                 System.out.println("\n========== 平局！战斗超过30回合 ==========");
                 return;
             }
         }
+    }
+
+    public String getWinner() {
+        return winner;
     }
 }

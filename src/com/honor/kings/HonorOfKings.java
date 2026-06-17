@@ -27,10 +27,12 @@ public class HonorOfKings {
     private static Person currentUser;
     private static HeroServiceImpl heroService = new HeroServiceImpl();
     private static Scanner scanner = new Scanner(System.in);
+    // 战斗记录列表：只保留最近 3 场，格式为 "时间 | 对战双方 | 结果"
+    private static List<String> battleRecords;
 
     // 程序入口：先初始化数据，然后循环显示登录或主菜单
     public static void main(String[] args) {
-        DataInitializer.initAll();
+        battleRecords = DataInitializer.initAll();
 
         while (true) {
             // currentUser 为 null 表示未登录，显示登录界面
@@ -215,10 +217,29 @@ public class HonorOfKings {
     }
 
     private static void queryTeam() {
+        System.out.println("\n已有队伍:");
+        for (Team t : DataInitializer.getAllTeams()) {
+            System.out.println("  " + t.getId() + " - " + t.getTeamName());
+        }
+        System.out.println("你也可以输入 NEW 创建一个新队伍");
         System.out.print("请输入要查询的队伍名称或ID: ");
         String input = scanner.nextLine().trim();
         if (input.isEmpty()) {
             System.out.println("输入不能为空");
+            return;
+        }
+        if ("NEW".equalsIgnoreCase(input)) {
+            System.out.print("请输入新队伍ID: ");
+            String newId = scanner.nextLine().trim();
+            System.out.print("请输入新队伍名称: ");
+            String newName = scanner.nextLine().trim();
+            if (newId.isEmpty() || newName.isEmpty()) {
+                System.out.println("队伍ID和名称不能为空");
+                return;
+            }
+            Team newTeam = new Team(newId, newName, 10, 0, LocalDateTime.now());
+            DataInitializer.getAllTeams().add(newTeam);
+            System.out.println("队伍已创建！");
             return;
         }
         Team found = null;
@@ -431,6 +452,12 @@ public class HonorOfKings {
             System.out.println((count + 1) + ". 对手: " + opponentName + " | 日期: " + dateStr + " | 比分: " + score + " | 结果: " + result);
             count++;
         }
+        if (!battleRecords.isEmpty()) {
+            System.out.println("\n--- 战斗模式记录（最近3场）---");
+            for (String r : battleRecords) {
+                System.out.println("  " + r);
+            }
+        }
     }
 
     private static void showRanking() {
@@ -573,12 +600,13 @@ public class HonorOfKings {
                 DataInitializer.getAllHeroes(),
                 DataInitializer.getAllEquipment(),
                 DataInitializer.getAllTeams(),
-                DataInitializer.getAllMatches()
+                DataInitializer.getAllMatches(),
+                battleRecords
         );
     }
 
     private static void startBattleMode() {
-        System.out.println("\n=== 战斗模式（彩蛋）===");
+        System.out.println("\n=== 战斗模式 ===");
         com.honor.kings.hero.Hero[] heroes = {
             new ZhaoYun(),
             new LiBai(),
@@ -588,7 +616,6 @@ public class HonorOfKings {
             System.out.println((i + 1) + ". " + heroes[i].getName());
         }
         System.out.print("选择第一个英雄 (1-" + heroes.length + "): ");
-        // 异常处理：Integer.parseInt 捕获非数字输入
         int choice1;
         int choice2;
         try {
@@ -608,6 +635,14 @@ public class HonorOfKings {
             System.out.println("不能选择同一个英雄");
             return;
         }
-        new Battle(heroes[choice1], heroes[choice2]).start();
+        Battle battle = new Battle(heroes[choice1], heroes[choice2]);
+        battle.start();
+        String winner = battle.getWinner();
+        String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String record = timeStr + " | " + heroes[choice1].getName() + " VS " + heroes[choice2].getName() + " | " + winner;
+        battleRecords.add(record);
+        if (battleRecords.size() > 3) {
+            battleRecords.remove(0);
+        }
     }
 }

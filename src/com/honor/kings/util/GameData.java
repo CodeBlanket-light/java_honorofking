@@ -19,14 +19,21 @@ public class GameData implements Serializable {
     private List<Equipment> equipment;
     private List<Team> teams;
     private List<MatchRecord> matches;
+    private List<String> battleRecords;
 
     public GameData(List<Player> players, List<Hero> heroes, List<Equipment> equipment,
                     List<Team> teams, List<MatchRecord> matches) {
+        this(players, heroes, equipment, teams, matches, new java.util.ArrayList<>());
+    }
+
+    public GameData(List<Player> players, List<Hero> heroes, List<Equipment> equipment,
+                    List<Team> teams, List<MatchRecord> matches, List<String> battleRecords) {
         this.players = players;
         this.heroes = heroes;
         this.equipment = equipment;
         this.teams = teams;
         this.matches = matches;
+        this.battleRecords = battleRecords;
     }
 
     public List<Player> getPlayers() { return players; }
@@ -34,4 +41,5 @@ public class GameData implements Serializable {
     public List<Equipment> getEquipment() { return equipment; }
     public List<Team> getTeams() { return teams; }
     public List<MatchRecord> getMatches() { return matches; }
+    public List<String> getBattleRecords() { return battleRecords; }
 }

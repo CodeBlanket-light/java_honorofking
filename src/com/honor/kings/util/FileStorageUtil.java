@@ -22,12 +22,18 @@ public class FileStorageUtil {
     public static void saveAllData(List<Player> players, List<Hero> heroes,
                                     List<Equipment> equipment, List<Team> teams,
                                     List<MatchRecord> matches) {
+        saveAllData(players, heroes, equipment, teams, matches, new java.util.ArrayList<>());
+    }
+
+    public static void saveAllData(List<Player> players, List<Hero> heroes,
+                                    List<Equipment> equipment, List<Team> teams,
+                                    List<MatchRecord> matches, List<String> battleRecords) {
         try {
             File dir = new File(DATA_DIR);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-            GameData gameData = new GameData(players, heroes, equipment, teams, matches);
+            GameData gameData = new GameData(players, heroes, equipment, teams, matches, battleRecords);
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SAVE_FILE))) {
                 oos.writeObject(gameData);
                 oos.flush();
