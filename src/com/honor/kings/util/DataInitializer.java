@@ -25,7 +25,7 @@ public class DataInitializer {
 
     // 初始化数据：优先从序列化文件加载，加载失败则使用硬编码数据
     // 文件I/O 与 异常处理：FileStorageUtil.loadAllData() 内部已捕获异常
-    public static void initAll() {
+    public static List<String> initAll() {
         GameData loaded = FileStorageUtil.loadAllData();
         if (loaded != null) {
             allEquipment = loaded.getEquipment();
@@ -39,7 +39,8 @@ public class DataInitializer {
             System.out.println("队伍: " + allTeams.size() + " 个");
             System.out.println("玩家: " + allPlayers.size() + " 个");
             System.out.println("比赛记录: " + allMatches.size() + " 条");
-            return;
+            List<String> records = loaded.getBattleRecords();
+            return records != null ? records : new ArrayList<>();
         }
         System.out.println("未找到存档文件，使用默认数据初始化");
         allEquipment = createEquipment();
@@ -54,6 +55,7 @@ public class DataInitializer {
         System.out.println("队伍: " + allTeams.size() + " 个");
         System.out.println("玩家: " + allPlayers.size() + " 个");
         System.out.println("比赛记录: " + allMatches.size() + " 条");
+        return new ArrayList<>();
     }
 
     public static List<Equipment> getAllEquipment() {
