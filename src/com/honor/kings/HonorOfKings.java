@@ -56,6 +56,9 @@ public class HonorOfKings {
         if ("2".equals(choice)) {
             showRegister();
             return;
+        } else if (!"1".equals(choice)) {
+            System.out.println("选择错误，请输入1或2。");
+            return;
         }
         System.out.print("用户名: ");
         String username = scanner.nextLine().trim();
