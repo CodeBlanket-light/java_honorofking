@@ -295,6 +295,34 @@ public class HonorOfKings {
         System.out.println("总比赛场次: " + totalMatches);
         System.out.println("胜率: " + (totalMatches == 0 ? "N/A" : String.format("%.1f", (double) wins / totalMatches * 100) + "%"));
         System.out.println("队内最强玩家: " + (strongest == null ? "无" : strongest.getName()));
+        if (totalMatches > 0) {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            System.out.println("最近比赛记录:");
+            List<MatchRecord> teamMatches = new java.util.ArrayList<>();
+            for (MatchRecord m : DataInitializer.getAllMatches()) {
+                Team a = m.getTeamA();
+                Team b = m.getTeamB();
+                if ((a != null && a.getId().equals(found.getId())) ||
+                    (b != null && b.getId().equals(found.getId()))) {
+                    teamMatches.add(m);
+                }
+            }
+            teamMatches.sort((m1, m2) -> m2.getMatchTime().compareTo(m1.getMatchTime()));
+            int cnt = 0;
+            for (MatchRecord m : teamMatches) {
+                if (cnt >= 5) break;
+                String opponent = m.getTeamA() != null && m.getTeamA().getId().equals(found.getId()) ?
+                    (m.getTeamB() != null ? m.getTeamB().getTeamName() : "未知") :
+                    (m.getTeamA() != null ? m.getTeamA().getTeamName() : "未知");
+                String dateStr = m.getMatchTime() != null ? m.getMatchTime().format(fmt) : "未知";
+                String result;
+                if (m.getWinner() == null) result = "平";
+                else if (m.getWinner().getId().equals(found.getId())) result = "胜";
+                else result = "负";
+                System.out.println("  " + (cnt + 1) + ". VS " + opponent + " | " + dateStr + " | " + m.getScoreA() + ":" + m.getScoreB() + " | " + result);
+                cnt++;
+            }
+        }
     }
 
     private static void queryHeroDetail() {
@@ -388,75 +416,13 @@ public class HonorOfKings {
     }
 
     private static void showMatchHistory() {
-        System.out.print("请输入要查询的玩家姓名: ");
-        String name = scanner.nextLine().trim();
-        if (name.isEmpty()) {
-            System.out.println("输入不能为空");
+        if (battleRecords == null || battleRecords.isEmpty()) {
+            System.out.println("暂无对战记录");
             return;
         }
-        Player player = null;
-        for (Player p : DataInitializer.getAllPlayers()) {
-            if (p.getName().equalsIgnoreCase(name)) {
-                player = p;
-                break;
-            }
-        }
-        if (player == null) {
-            System.out.println("未找到该玩家");
-            return;
-        }
-        Team playerTeam = player.getCurrentTeam();
-        if (playerTeam == null) {
-            System.out.println("该玩家暂无对战记录");
-            return;
-        }
-        List<MatchRecord> records = new ArrayList<>();
-        for (MatchRecord match : DataInitializer.getAllMatches()) {
-            Team a = match.getTeamA();
-            Team b = match.getTeamB();
-            if ((a != null && a.getId().equals(playerTeam.getId())) ||
-                (b != null && b.getId().equals(playerTeam.getId()))) {
-                records.add(match);
-            }
-        }
-        if (records.isEmpty()) {
-            System.out.println("该玩家暂无对战记录");
-            return;
-        }
-        // 按比赛时间降序排列（最新的在前），取前5场
-        records.sort((m1, m2) -> m2.getMatchTime().compareTo(m1.getMatchTime()));
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        System.out.println(player.getName() + " 最近5场对战记录:");
-        int count = 0;
-        for (MatchRecord match : records) {
-            if (count >= 5) break;
-            // 根据玩家所在队伍判断对手：如果玩家队伍是 teamA，则对手是 teamB，反之亦然
-            Team opponent;
-            boolean isTeamA = match.getTeamA() != null && match.getTeamA().getId().equals(playerTeam.getId());
-            if (isTeamA) {
-                opponent = match.getTeamB();
-            } else {
-                opponent = match.getTeamA();
-            }
-            String opponentName = opponent != null ? opponent.getTeamName() : "未知";
-            String dateStr = match.getMatchTime() != null ? match.getMatchTime().format(fmt) : "未知";
-            String score = match.getScoreA() + " : " + match.getScoreB();
-            String result;
-            if (match.getWinner() == null) {
-                result = "平";
-            } else if (match.getWinner().getId().equals(playerTeam.getId())) {
-                result = "胜";
-            } else {
-                result = "负";
-            }
-            System.out.println((count + 1) + ". 对手: " + opponentName + " | 日期: " + dateStr + " | 比分: " + score + " | 结果: " + result);
-            count++;
-        }
-        if (!battleRecords.isEmpty()) {
-            System.out.println("\n--- 战斗模式记录（最近3场）---");
-            for (String r : battleRecords) {
-                System.out.println("  " + r);
-            }
+        System.out.println("战斗模式记录（最近3场）:");
+        for (String r : battleRecords) {
+            System.out.println("  " + r);
         }
     }
 
