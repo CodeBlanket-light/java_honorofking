@@ -1,6 +1,9 @@
 package com.honor.kings.model.entity;
 
-public class Equipment {
+import java.io.Serializable;
+
+public class Equipment implements Serializable {
+    private static final long serialVersionUID = 1L;
     public enum EquipmentType {
         WEAPON, ARMOR, BOOTS, ACCESSORY
     }

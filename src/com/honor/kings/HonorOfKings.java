@@ -23,14 +23,18 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
 public class HonorOfKings {
+    // 多态：currentUser 声明为 Person 类型，实际可指向 Player 或 Admin 实例
     private static Person currentUser;
     private static HeroServiceImpl heroService = new HeroServiceImpl();
     private static Scanner scanner = new Scanner(System.in);
 
+    // 程序入口：先初始化数据，然后循环显示登录或主菜单
     public static void main(String[] args) {
         DataInitializer.initAll();
 
         while (true) {
+            // currentUser 为 null 表示未登录，显示登录界面
+            // 非 null 表示已登录，显示主菜单
             if (currentUser == null) {
                 showLoginMenu();
             } else {
@@ -56,25 +60,28 @@ public class HonorOfKings {
         System.out.print("密码: ");
         String password = scanner.nextLine().trim();
 
+        // admin 为硬编码的管理员账号（Admin 类型），不走玩家列表
         if ("admin".equals(username) && "admin123".equals(password)) {
             currentUser = new Admin("A01", "admin", "admin@honor.com", java.time.LocalDateTime.now(), "SUPER", "运营部");
             System.out.println("登录成功！当前角色: " + currentUser.getRole() + " (" + currentUser.getName() + ")");
-        } else if ("player1".equals(username) && "123456".equals(password)) {
-            currentUser = new Player("P01", "player1", "player1@honor.com", java.time.LocalDateTime.now(), 10, 50, 30);
+            return;
+        }
+        // 遍历玩家列表查找匹配的用户名（包括预置的 player1 和注册用户）
+        Player found = null;
+        for (Player p : DataInitializer.getAllPlayers()) {
+            if (p.getName().equals(username)) {
+                found = p;
+                break;
+            }
+        }
+        if (found == null) {
+            System.out.println("用户名不存在");
+        } else if (found.getPassword() != null && found.getPassword().equals(password)) {
+            // 多态：currentUser 被赋值为 Player 对象，与 Admin 有不同权限
+            currentUser = found;
             System.out.println("登录成功！当前角色: " + currentUser.getRole() + " (" + currentUser.getName() + ")");
         } else {
-            boolean found = false;
-            for (Player p : DataInitializer.getAllPlayers()) {
-                if (p.getName().equals(username)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                System.out.println("暂不支持自定义密码登录，请使用 player1/123456 或注册新账号。");
-            } else {
-                System.out.println("用户名或密码错误，请重试。");
-            }
+            System.out.println("密码错误");
         }
     }
 
@@ -98,8 +105,9 @@ public class HonorOfKings {
             System.out.println("密码不能少于4位。");
             return;
         }
+        // ID 使用时间戳确保唯一性，如 p1712345678901
         String id = "p" + System.currentTimeMillis();
-        Player newPlayer = new Player(id, regName, regName + "@honor.com", LocalDateTime.now(), 1, 0, 0);
+        Player newPlayer = new Player(id, regName, regName + "@honor.com", LocalDateTime.now(), 1, 0, 0, regPwd);
         DataInitializer.getAllPlayers().add(newPlayer);
         FileStorageUtil.saveAllData(
                 DataInitializer.getAllPlayers(),
@@ -148,6 +156,7 @@ public class HonorOfKings {
             case "6":
                 showRanking();
                 break;
+            // 多态：instanceof 判断运行时类型，Admin 才有数据管理权限
             case "7":
                 if (currentUser instanceof Admin) {
                     showDataManagement();
@@ -315,7 +324,10 @@ public class HonorOfKings {
         }
     }
 
+    // 装备使用次数排名：遍历所有英雄的装备列表，统计每件装备出现次数
+    // 排名公式：使用次数降序 → 次数相同按名称排序 → 取前5名
     private static void showEquipmentStats() {
+        // 两个 Map 分别存装备ID→次数 和 装备ID→对象
         Map<String, Integer> equipCount = new HashMap<>();
         Map<String, Equipment> equipMap = new HashMap<>();
         for (Equipment eq : DataInitializer.getAllEquipment()) {
@@ -335,6 +347,8 @@ public class HonorOfKings {
             System.out.println("暂无装备数据");
             return;
         }
+        // 使用 Stream API 对 Map 按值降序排序，次数相同按装备名称排序
+        // sorted() 自定义比较器：先比次数（降序），次数相同比名称（升序）
         List<Entry<String, Integer>> sorted = equipCount.entrySet().stream()
                 .sorted((a, b) -> {
                     int cmp = b.getValue().compareTo(a.getValue());
@@ -388,12 +402,14 @@ public class HonorOfKings {
             System.out.println("该玩家暂无对战记录");
             return;
         }
+        // 按比赛时间降序排列（最新的在前），取前5场
         records.sort((m1, m2) -> m2.getMatchTime().compareTo(m1.getMatchTime()));
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         System.out.println(player.getName() + " 最近5场对战记录:");
         int count = 0;
         for (MatchRecord match : records) {
             if (count >= 5) break;
+            // 根据玩家所在队伍判断对手：如果玩家队伍是 teamA，则对手是 teamB，反之亦然
             Team opponent;
             boolean isTeamA = match.getTeamA() != null && match.getTeamA().getId().equals(playerTeam.getId());
             if (isTeamA) {
@@ -423,6 +439,8 @@ public class HonorOfKings {
             System.out.println("暂无玩家数据");
             return;
         }
+        // 排行榜排序规则：先按胜率降序排列
+        // 平局处理：总场次为0时胜率设为-1（排在最后）；胜率相同则按总场次降序
         players.sort((a, b) -> {
             double rateA = a.getTotalMatches() == 0 ? -1 : a.getWinRate();
             double rateB = b.getTotalMatches() == 0 ? -1 : b.getWinRate();
@@ -461,6 +479,7 @@ public class HonorOfKings {
                     String pEmail = scanner.nextLine().trim();
                     System.out.print("请输入玩家等级: ");
                     String pLevelStr = scanner.nextLine().trim();
+                    // 异常处理：Integer.parseInt 可能抛出 NumberFormatException
                     try {
                         int pLevel = Integer.parseInt(pLevelStr);
                         Player newPlayer = new Player(pId, pName, pEmail, LocalDateTime.now(), pLevel, 0, 0);
@@ -521,6 +540,8 @@ public class HonorOfKings {
                     String eDef = scanner.nextLine().trim();
                     System.out.print("请输入价格: ");
                     String ePrice = scanner.nextLine().trim();
+                    // 枚举解析：EquipmentType.valueOf() 将字符串转为枚举常量
+                    // 若输入不匹配任一枚举值（如输入"HELMET"），抛出 IllegalArgumentException
                     try {
                         Equipment.EquipmentType eType = Equipment.EquipmentType.valueOf(eTypeStr.toUpperCase());
                         Equipment newEq = new Equipment(eId, eName, eType,
@@ -545,6 +566,7 @@ public class HonorOfKings {
         }
     }
 
+    // 程序退出前调用序列化保存所有数据到 data/game_data.ser
     private static void saveBeforeExit() {
         FileStorageUtil.saveAllData(
                 DataInitializer.getAllPlayers(),
@@ -566,6 +588,7 @@ public class HonorOfKings {
             System.out.println((i + 1) + ". " + heroes[i].getName());
         }
         System.out.print("选择第一个英雄 (1-" + heroes.length + "): ");
+        // 异常处理：Integer.parseInt 捕获非数字输入
         int choice1;
         int choice2;
         try {

@@ -1,9 +1,11 @@
 package com.honor.kings.model.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Hero {
+public class Hero implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id;
     private String name;
     private String title;

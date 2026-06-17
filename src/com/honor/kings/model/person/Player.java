@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player extends Person {
+    private String password;
     private int level;
     private int totalMatches;
     private int winCount;
@@ -20,10 +21,16 @@ public class Player extends Person {
 
     public Player(String id, String name, String email, LocalDateTime createTime,
                   int level, int totalMatches, int winCount) {
+        this(id, name, email, createTime, level, totalMatches, winCount, null);
+    }
+
+    public Player(String id, String name, String email, LocalDateTime createTime,
+                  int level, int totalMatches, int winCount, String password) {
         super(id, name, email, createTime);
         this.level = level;
         this.totalMatches = totalMatches;
         this.winCount = winCount;
+        this.password = password;
         this.ownedHeroes = new ArrayList<>();
     }
 
@@ -69,6 +76,8 @@ public class Player extends Person {
         return (double) winCount / totalMatches * 100;
     }
 
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
     public int getLevel() { return level; }
     public void setLevel(int level) { this.level = level; }
     public int getTotalMatches() { return totalMatches; }

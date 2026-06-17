@@ -19,7 +19,25 @@ public class DataInitializer {
     private static List<Player> allPlayers;
     private static List<MatchRecord> allMatches;
 
+    // 初始化数据：优先从序列化文件加载，加载失败则使用硬编码数据
+    // 文件I/O 与 异常处理：FileStorageUtil.loadAllData() 内部已捕获异常
     public static void initAll() {
+        GameData loaded = FileStorageUtil.loadAllData();
+        if (loaded != null) {
+            allEquipment = loaded.getEquipment();
+            allHeroes = loaded.getHeroes();
+            allTeams = loaded.getTeams();
+            allPlayers = loaded.getPlayers();
+            allMatches = loaded.getMatches();
+            System.out.println("=== 从存档加载数据完成 ===");
+            System.out.println("装备: " + allEquipment.size() + " 件");
+            System.out.println("英雄: " + allHeroes.size() + " 个");
+            System.out.println("队伍: " + allTeams.size() + " 个");
+            System.out.println("玩家: " + allPlayers.size() + " 个");
+            System.out.println("比赛记录: " + allMatches.size() + " 条");
+            return;
+        }
+        System.out.println("未找到存档文件，使用默认数据初始化");
         allEquipment = createEquipment();
         allHeroes = createHeroes(allEquipment);
         allTeams = createTeams();
@@ -126,6 +144,7 @@ public class DataInitializer {
         Random rand = new Random(123);
         String[] names = {"梦泪", "剑仙", "张大仙", "孤影", "北慕", "可杰", "韩涵", "微凉", "故辞", "小予神"};
 
+        list.add(new Player("P00", "player1", "player1@honor.com", LocalDateTime.now(), 10, 50, 30, "123456"));
         for (int i = 0; i < 10; i++) {
             int totalMatches = 10 + rand.nextInt(100);
             int winCount = rand.nextInt(totalMatches + 1);

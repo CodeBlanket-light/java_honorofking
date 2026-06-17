@@ -1,8 +1,10 @@
 package com.honor.kings.model.entity;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Team {
+public class Team implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id;
     private String teamName;
     private int maxMembers;

@@ -1,8 +1,10 @@
 package com.honor.kings.model.person;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public abstract class Person {
+public abstract class Person implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id;
     private String name;
     private String email;

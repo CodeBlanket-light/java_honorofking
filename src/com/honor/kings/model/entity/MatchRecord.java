@@ -1,8 +1,10 @@
 package com.honor.kings.model.entity;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class MatchRecord {
+public class MatchRecord implements Serializable {
+    private static final long serialVersionUID = 1L;
     public enum MatchStatus {
         SCHEDULED, IN_PROGRESS, FINISHED, CANCELLED
     }
