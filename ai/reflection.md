@@ -1,42 +1,56 @@
 # Reflection
 
 ## 1. Which AI tools or models did you use?
-我主要使用了 DeepSeek Chat（模型：DeepSeek-V3）。在某些设计审查环节也参考了 ChatGPT（GPT-4o）的建议进行对比。
+我全程使用了 DeepSeek Chat（模型：DeepSeek-V3），作为架构师、实现者和测试/审查员三种角色完成项目。没有使用其他 AI 工具。
 
 ## 2. Which prompt was the most useful? Why?
-最有用的提示词是 Prompt 01（Architect Agent 设计审查）。因为它在我写代码之前就指出了双向关联的一致性问题，让我避免了后期大规模重构。采纳方案 A（单向关联）后，Team 和 Player 的关系变得清晰，维护成本大大降低。
+最有用的提示词是 Prompt 01（Architect Agent 设计审查）。它在编码开始前就指出了 Team 和 Player 之间双向关联的一致性问题，让我避免了后期大规模重构。采纳单向关联方案（Team 不持有 Player 列表，通过 Player.currentTeam 查询）后，删除队伍不需要同步更新 Player，维护成本大大降低。这个决策贯穿了整个项目，是设计上最关键的正确决定。
 
 ## 3. Which AI-generated suggestion was wrong, incomplete, or misleading?
-AI 在生成 `TeamServiceImpl` 时，`getTeamMembers` 方法直接返回了空列表并建议我通过 PlayerService 实现。这个建议本身不错，但 AI 没有告诉我 PlayerService 还不存在，也没有生成 PlayerService 的代码。我不得不手动创建占位逻辑并添加 TODO 注释。这不算严重错误，但确实不够完整。
+在战斗系统重构时，AI 建议创建 12 个新英雄类（关羽、诸葛亮等），每个英雄 3 个专属技能。这个建议本身很好，但 AI 生成的技能数据与英雄人设匹配度不够高（如周瑜的技能名称不符合历史形象），我手动修改了部分技能名称和伤害值。此外，AI 在生成排行榜功能时最初使用的是"实力分"公式（胜率×50+等级×10-总场次×0.1），但课程要求的是直接按胜率降序排列，我后来改为使用 Comparator.comparing(Player::getWinRate).reversed() 和 thenComparing() 实现多级排序。
 
 ## 4. How did you check whether AI-generated code was correct?
-- 每生成一个类，我都在 IDE（VS Code）中手动编译检查，确保没有语法错误。
-- 检查 import 路径是否匹配项目包结构。
-对比课程要求（如 `Person` 必须是抽象类，`Player` 和 `Admin` 必须继承它），确认 AI 生成的类满手动运行主菜单，验证登录和查询功能是否正常工作。
+我主要采用以下方式验证：
+- 每次生成代码后，使用 `javac` 编译检查，确保无语法错误。
+- 手动运行程序，测试每个菜单功能（登录、查询、战斗、排行榜等），验证输入输出是否符合预期。
+- 检查 import 路径是否与实际包结构一致，这是 AI 最常见的错误来源。
+- 对排名公式和装备推荐逻辑，输入已知数据手动计算验证结果是否正确。
+- 最终进行全功能回归测试，确保新增功能不破坏已有功能。
 
 ## 5. What bugs did you fix yourself instead of asking AI to fix?
-我修正了 `Player.java` 和 `Admin.java` 的 import 路径错误。AI 建议我修正，但我没有让 AI 重写文件，而是自己在 IDE 里手动改了。另外，`MatchRecord` 的 `determineWinner()` 方法在平局时 AI 未明确处理 winner 为 null，我手动补充了该逻辑。
+- **胜率计算 Bug**：DataInitializer 中玩家的 winCount 可能超过 totalMatches（如 winCount=131, totalMatches=49），导致胜率超过 100%。我手动修正了初始化逻辑，确保 winCount ≤ totalMatches。
+- **编码问题**：在 Windows cmd 下中文显示乱码，搜索"梦泪"返回"未找到该玩家"。我通过添加 `chcp 65001` 切换 UTF-8 编码解决，并在 README 中说明。
+- **英雄数据索引错位**：DataInitializer 中英雄数据数组的阵营字段和数值字段索引不对应，导致 Integer.parseInt 解析中文字符串失败。我手动修复了数组索引。
+- **排行榜公式不符课程要求**：AI 最初实现了自定义"实力分"公式，我改为按胜率降序 + 总场次降序的多级排序，使用 Comparator 链式调用。
+- **战斗记录类型变更**：从 String 列表改为 BattleRecord 对象时，GameData 和 FileStorageUtil 的类型未同步更新，我手动修正了所有引用的类型声明。
 
 ## 6. What Java concept did you understand better after using AI?
-通过 AI 生成代码和解释，我对 **聚合 vs 组合** 以及 **单向 vs 双向关联** 的理解更清晰了。之前没有仔细考虑过关联方向对代码维护性的影响，AI 的 Architect 提示让我真正实践了“高内聚低耦合”的设计原则。
+通过 AI 辅助，我对 **文件 I/O（序列化）** 的理解最深。AI 生成了 FileStorageUtil 和 GameData 类，展示了如何使用 ObjectOutputStream/ObjectInputStream 将结构化数据持久化到文件。我学会了：
+- 所有实体类必须实现 Serializable 接口并添加 serialVersionUID。
+- 使用 try-with-resources 自动关闭流，避免资源泄漏。
+- 将多个列表封装到一个 GameData 对象中序列化，简化 I/O 操作。
+- 在程序启动时优先加载存档，失败时回退到硬编码数据的设计模式。
 
 ## 7. What Java concept are you still unsure about?
-我对泛型接口（如 `Searchable<T>`、`Persistable<T>`）和 **集合框架**（`Map`、`List` 的恰当使用）还有一些不确定。虽然 AI 帮我生成了代码，但在处理 `searchByName` 时，如何高效地模糊匹配多个字段，我还没有很好的把握。另外，`LocalDateTime` 的格式化和比较也让我有点困惑。
+我对 **泛型接口**（如 `Searchable<T>`、`Persistable<T>`）的实际应用场景还有一些不确定。虽然 AI 帮我生成了接口和实现类，但在主菜单中最终直接使用了 DataInitializer 的静态方法，没有通过接口调用的方式使用 Service 层。我知道泛型可以提升代码的复用性，但在控制台应用中如何优雅地组织 Service 层调用，我还没有很好的把握。
 
 ## 8. Did AI make the project easier, harder, or both? Explain.
 两者都有。
-更容易的一面：AI 快速生成了大量样板代码（构造器、getter/setter、基础 CRUD），节省了约 40% 的键盘敲击时间。设计审查功能也帮我避免了早期决策失误。
-更困难的一面：AI 生成的代码不完全符合我的项目包结构，导致编译错误和调试时间。我需要花精力检查 AI 的每一行输出，确保它引用的类确实存在。这增加了认知负担，但确实加深了我对代码的理解。
+**更容易的一面**：AI 快速生成了大量样板代码（构造器、getter/setter、实体类骨架、15 个英雄类及技能），节省了约 60% 的编码时间。Architect Agent 在设计阶段发现双向关联问题，避免了后期大规模重构。Testing Agent 帮助生成测试用例并验证功能正确性。
+**更困难的一面**：AI 生成的代码经常包路径不匹配，每次都需要手动修正 import。AI 建议的功能（如 getTeamMembers 通过 PlayerService 实现）不够完整，需要人工补充。战斗英雄的技能数据需要手动调整才符合人设。总体而言，AI 让编码速度大幅提升，但也增加了代码审查的工作量。
 
 ## 9. Which parts of the final project were mainly written by you?
-- `Player.java` 和 `Admin.java` 的 import 修正及业务方法（如 `joinTeam`、`leaveTeam`）的细节调整。
-`HonorOfKings.java` 主菜单的硬编码示例数据（手动填充的玩家和英雄信息）以及菜单流程控制逻辑。
-所有 `git commit` 信息的撰写、`plan.md` 的部分章节、`agent-log.md` 和 `reflection.md` 的内容整理。
-将 AI 生成的多个类组合到一起，并修改包路径冲突。
+- **Bug 修复**：胜率超 100% 的修正、英雄数据索引错位修复、编码问题排查。
+- **菜单功能逻辑**：玩家查询、队伍概览（含 JOIN 加入和 NEW 创建）、英雄详情（含装备推荐）、装备统计（含综合分排名）、对战历史（含装备出场统计）、排行榜（含多级排序）等全部 9 个菜单项的逻辑实现。
+- **战斗系统整合**：将 AI 生成的 15 个战斗英雄整合到 startBattleMode() 中，实现随机抽取和 AI 决策逻辑。
+- **数据持久化**：将战斗记录从 String 列表重构为 BattleRecord 对象，并整合到序列化体系中。
+- **文档**：README.md、plan.md、test-cases.md 的内容整理和持续更新。
+- **Git 管理**：所有 commit 信息的撰写、分支管理和推送。
 
 ## 10. Which parts were mainly generated or heavily assisted by AI?
-全部实体类（`Person`、`Player`、`Admin`、`Hero`、`Equipment`、`Team`、`MatchRecord`）的初版代码骨架。
-所有 Service 层接口和实现类（`Searchable`、`Persistable`、`HeroServiceImpl`、`TeamServiceImpl`、`MatchServiceImpl`）。
- `DataInitializer` 中的大量硬编码数据集生成。
-`HonorOfKings.java` 初始菜单框架和登录逻辑。
-UML 类图的文本描述和 `plan.md` 中的设计建议。
+- **实体类初版骨架**：`Person`、`Player`、`Admin`、`Hero`、`Equipment`、`Team`、`MatchRecord` 的初版代码（含属性、构造器、getter/setter）。
+- **Service 层**：`Searchable`、`Persistable` 接口及 `HeroServiceImpl`、`TeamServiceImpl`、`MatchServiceImpl` 的实现。
+- **数据初始化**：`DataInitializer` 中的 20 件装备、15 个英雄、3 个队伍、10 个玩家的硬编码数据集。
+- **战斗英雄类**：12 个新英雄类（关羽、诸葛亮等）的创建及 3 个技能的初始数据。
+- **序列化工具**：`FileStorageUtil`、`GameData` 的框架代码。
+- **UML 类图**：Mermaid 格式的 UML 图生成。
